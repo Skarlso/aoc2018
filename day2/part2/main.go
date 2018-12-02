@@ -13,31 +13,27 @@ func main() {
 		j := i + 1
 		for j < len(lines) {
 			l2 := lines[j]
-			split1 := strings.Split(l, "")
-			split2 := strings.Split(l2, "")
-			// fmt.Println(diff)
-			if ok, v := difference(split1, split2); ok {
-				fmt.Println(strings.Join(v, ""))
+			if ok, v := difference(l, l2); ok {
+				fmt.Println(v)
 				return
 			}
 			j++
 		}
 	}
-
 }
 
-func difference(a, b []string) (bool, []string) {
+func difference(a, b string) (bool, string) {
 	counter := 0
-	same := []string{}
+	same := []rune{}
 	for i, letter := range a {
-		if letter != b[i] {
+		if letter != rune(b[i]) {
 			counter++
 		} else {
 			same = append(same, letter)
 		}
 	}
 	if counter == 1 {
-		return true, same
+		return true, string(same)
 	}
-	return false, []string{}
+	return false, ""
 }
