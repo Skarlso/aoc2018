@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
 func main() {
-	content, _ := ioutil.ReadFile("input.txt")
+	filename := os.Args[1]
+	content, _ := ioutil.ReadFile(filename)
 	lines := strings.Split(string(content), "\n")
 	for i, l := range lines {
 		j := i + 1

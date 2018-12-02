@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strconv"
 )
 
 func main() {
 	count := 0
-	content, _ := ioutil.ReadFile("input.txt")
+	filename := os.Args[1]
+	content, _ := ioutil.ReadFile(filename)
 	lines := bytes.Split(content, []byte("\n"))
 	var sum int
 	seen := make(map[int]bool)
