@@ -22,8 +22,8 @@ func main() {
 	for _, l := range lines {
 		var id, leftEdge, topEdge, width, heigth int
 		fmt.Sscanf(l, "#%d @ %d,%d: %dx%d", &id, &leftEdge, &topEdge, &width, &heigth)
-		for i := 0; i < width; i++ {
-			for j := 0; j < heigth; j++ {
+		for i := leftEdge; i < width; i++ {
+			for j := topEdge; j < heigth; j++ {
 				fabric[i][j] = append(fabric[i][j], id)
 			}
 		}
