@@ -25,24 +25,33 @@ func main() {
 	for _, l := range lines {
 		var id, leftEdge, topEdge, width, heigth int
 		fmt.Sscanf(l, "#%d @ %d,%d: %dx%d", &id, &leftEdge, &topEdge, &width, &heigth)
-		for i := topEdge; i < width; i++ {
-			for j := leftEdge; j < heigth; j++ {
+		for i := topEdge; i < topEdge+heigth; i++ {
+			for j := leftEdge; j < leftEdge+width; j++ {
 				fabric[i][j] = append(fabric[i][j], id)
 			}
 		}
 	}
 
+	square := 0
+	// for i := range fabric {
+	// 	for j := range fabric[i] {
+	// 		if len(fabric[i][j]) > 1 {
+	// 			fmt.Print("X")
+	// 		} else if len(fabric[i][j]) == 1 {
+	// 			fmt.Print(fabric[i][j][0])
+	// 		} else if len(fabric[i][j]) == 0 {
+	// 			fmt.Print(".")
+	// 		}
+	// 	}
+	// 	fmt.Print("\n")
+	// }
+
 	for i := range fabric {
-		fmt.Print(".")
 		for j := range fabric[i] {
-			if len(fabric[i][j]) > 1 {
-				fmt.Print("X")
-			} else if len(fabric[i][j]) == 1 {
-				fmt.Print(fabric[i][j][0])
-			} else if len(fabric[i][j]) == 0 {
-				fmt.Print(".")
+			if len(fabric[i][j]) == 1 {
+				square++
 			}
 		}
-		fmt.Print("\n")
 	}
+	fmt.Println(square)
 }
