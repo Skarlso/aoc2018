@@ -13,10 +13,11 @@ func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
 	ls := make([]int, 0)
-	// could have gathered all the letters from the content, but meh.
-	alphabet := "abcdefghijklmnopqrstuvwxyz"
-	for _, a := range []rune(alphabet) {
+	for a := 'a'; a <= 'z'; a++ {
 		c := string(content)
+		if !strings.ContainsRune(c, a) {
+			continue
+		}
 		c = strings.Replace(c, string(a), "", -1)
 		c = strings.Replace(c, string(unicode.ToUpper(a)), "", -1)
 		runes := []rune(c)
