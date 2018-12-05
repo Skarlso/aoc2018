@@ -8,12 +8,6 @@ import (
 	"strings"
 )
 
-type date struct {
-	month  int
-	day    int
-	onDuty []int
-}
-
 func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
