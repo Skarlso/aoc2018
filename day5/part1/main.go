@@ -18,9 +18,10 @@ func main() {
 			runes = append(runes[:i], runes[i+2:]...)
 			if i > 0 {
 				i -= 2
+			} else {
+				i--
 			}
 		}
 	}
 	fmt.Println(len(runes))
-	fmt.Println(string(runes))
 }
