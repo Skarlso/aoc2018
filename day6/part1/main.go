@@ -63,11 +63,12 @@ func main() {
 			closest, invalid := checkIfClosestInDirection(c.x, c.y, d.x, d.y)
 			if invalid {
 				c.invalid = true
-				break
+				// break
 			}
 			c.closesTo += closest
 		}
 		if !c.invalid {
+			c.closesTo++
 			areas = append(areas, c.closesTo)
 		}
 		fmt.Printf("Checking: %d; with x: %d, y: %d; closestTo: %d, invalid: %v\n", c.n, c.x, c.y, c.closesTo, c.invalid)
@@ -97,11 +98,12 @@ func checkIfClosestInDirection(startX, startY, dX, dY int) (closest int, invalid
 		myDistance := abs(startX-x) + abs(startY-y)
 		for _, c := range coords {
 			neighbourDistance := abs(c.x-x) + abs(c.y-y)
-			fmt.Printf("MyDistance: %d; NeighbourDistance: %d\n", myDistance, neighbourDistance)
-			if myDistance < neighbourDistance || myDistance == neighbourDistance {
+			// fmt.Printf("MyDistance: %d; NeighbourDistance: %d\n", myDistance, neighbourDistance)
+			if myDistance < neighbourDistance {
 				mostClose = true
 			} else {
 				mostClose = false
+				break
 			}
 		}
 
