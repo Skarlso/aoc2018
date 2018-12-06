@@ -85,12 +85,11 @@ func checkIfClosestInDirection(startX, startY, dX, dY int) (closest int, invalid
 	// or find someone who is closer to that location.
 	x := startX
 	y := startY
-	edge := false
 	for {
 		x += dX
 		y += dY
 		if x <= minC || y <= minC || x >= maxC || y >= maxC {
-			edge = true
+			return closest, true
 		}
 		mostClose := false
 		// the problem was that I was matching it to all of them and if it's closest than all of the closest
@@ -101,15 +100,15 @@ func checkIfClosestInDirection(startX, startY, dX, dY int) (closest int, invalid
 			fmt.Printf("MyDistance: %d; NeighbourDistance: %d\n", myDistance, neighbourDistance)
 			if myDistance < neighbourDistance || myDistance == neighbourDistance {
 				mostClose = true
-			} else if myDistance < neighbourDistance && edge {
-				// invalid
-			} else if neighbourDistance > myDistance {
-				// ignore
+			} else {
+				mostClose = false
 			}
 		}
 
 		if mostClose {
 			closest++
+		} else {
+			return closest, false
 		}
 	}
 }
