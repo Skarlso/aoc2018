@@ -50,7 +50,7 @@ func main() {
 			x int
 			y int
 		}{
-			{x: 0, y: 0},
+			// {x: 0, y: 0},
 			{x: -1, y: -1},
 			{x: 1, y: 1},
 			{x: 0, y: 1},
@@ -83,30 +83,21 @@ func main() {
 func checkIfClosestInDirection(startX, startY, dX, dY int) (closest int, invalid bool) {
 	// keep adding the direction until either we hit the "edge" and become invalid
 	// or find someone who is closer to that location.
+	x := startX
+	y := startY
 	for {
-		edge := false
-		x := startX + dX
-		y := startY + dY
+		x = x + dX
+		y = y + dY
 		if x <= minC || y <= minC || x >= maxC || y >= maxC {
-			fmt.Println("at the edge")
-			edge = true
+			return 0, true
 		}
-		fmt.Println(x, y)
 		for _, c := range coords {
-			// if c.x == startX && c.y == startY {
-			// 	closest++
-			// 	continue
-			// }
 			myDistance := abs(startX-x) + abs(startY-y)
 			neighbourDistance := abs(c.x-x) + abs(c.y-y)
 			fmt.Printf("MyDistance: %d; NeighbourDistance: %d\n", myDistance, neighbourDistance)
-			if myDistance < neighbourDistance {
-				if edge {
-					fmt.Println("marking invalid")
-					return 0, true
-				}
+			if myDistance < neighbourDistance || myDistance == neighbourDistance {
 				closest++
-			} else {
+			} else if neighbourDistance > myDistance {
 				return closest, false
 			}
 		}
