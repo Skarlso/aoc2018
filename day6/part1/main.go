@@ -16,10 +16,6 @@ type coord struct {
 	closesTo int
 }
 
-func (c *coord) String() string {
-	return fmt.Sprintf("x: %d, y: %d, n: %d, invalid: %v, closesTo: %d", c.x, c.y, c.n, c.invalid, c.closesTo)
-}
-
 const (
 	minC = 0
 	maxC = 359
@@ -32,11 +28,10 @@ func main() {
 	content, _ := ioutil.ReadFile(filename)
 	lines := strings.Split(string(content), "\n")
 	areas := make([]int, 0)
-	for i, l := range lines {
+	for _, l := range lines {
 		var x, y int
 		fmt.Sscanf(l, "%d, %d", &x, &y)
 		c := coord{
-			n:        i,
 			x:        x,
 			y:        y,
 			invalid:  false,
@@ -53,7 +48,6 @@ func main() {
 		}
 		c.closesTo += closest
 		if !c.invalid {
-			// c.closesTo++
 			areas = append(areas, c.closesTo)
 		}
 	}
