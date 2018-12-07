@@ -8,15 +8,8 @@ import (
 )
 
 type coord struct {
-	n        int
-	x        int
-	y        int
-	invalid  bool
-	closesTo int
-}
-
-func (c *coord) String() string {
-	return fmt.Sprintf("x: %d, y: %d, n: %d, invalid: %v, closesTo: %d", c.x, c.y, c.n, c.invalid, c.closesTo)
+	x int
+	y int
 }
 
 const (
@@ -31,15 +24,12 @@ func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
 	lines := strings.Split(string(content), "\n")
-	for i, l := range lines {
+	for _, l := range lines {
 		var x, y int
 		fmt.Sscanf(l, "%d, %d", &x, &y)
 		c := coord{
-			n:        i,
-			x:        x,
-			y:        y,
-			invalid:  false,
-			closesTo: 0,
+			x: x,
+			y: y,
 		}
 		coords = append(coords, &c)
 	}
