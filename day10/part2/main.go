@@ -69,6 +69,7 @@ func main() {
 	}
 
 	alligned := false
+	seconds := 0
 	for !alligned {
 		mx, my, max, may := boundries(stars)
 		for _, s := range stars {
@@ -86,7 +87,9 @@ func main() {
 				s.add()
 			}
 		}
+		seconds++
 	}
+	fmt.Println("seconds: ", seconds-1)
 	writeSvg(minX, maxX, minY, maxY, stars)
 }
 
