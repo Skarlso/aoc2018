@@ -1,66 +1,60 @@
 package main
 
-import "fmt"
-
-const (
-	playerCount         = 1234
-	lastMarbleWorth     = 71852
-	testPlayerCount     = 10
-	testLastMarbleWorth = 1618
+import (
+	"fmt"
 )
 
+const (
+	lastMarbleValue = 7185200
+	playerCount     = 404
+)
+
+type marbleCircle struct {
+	next *marbleCircle
+	prev *marbleCircle
+	v    int
+}
+
+func (mc *marbleCircle) insert(v int) *marbleCircle {
+	newMarbleCircle := marbleCircle{v: v}
+	nextCricle := mc.next
+	mc.next, nextCricle.prev = &newMarbleCircle, &newMarbleCircle
+	newMarbleCircle.prev, newMarbleCircle.next = mc, nextCricle
+	return &newMarbleCircle
+}
+func (mc *marbleCircle) delete() *marbleCircle {
+	mc.prev.next = mc.next
+	mc.next.prev = mc.next
+	return mc.next
+}
+
 func main() {
-	players := make(map[int]int)
-	for i := 0; i < testPlayerCount; i++ {
-		players[i] = 0
-	}
-	marbles := make([]int, 0)
-	marbles = append(marbles, 0)
-	currentMarbleLocation := 1
-	currentPlayer := 0
-	currentMarbelValue := 1
-	for currentMarbelValue < testLastMarbleWorth {
-		currentPlayer = (currentPlayer + 1) % (testPlayerCount + 1)
-		if currentPlayer == 0 {
-			currentPlayer = 1
+	score := make([]int, playerCount)
+	circle := &marbleCircle{v: 0}
+	circle.next = circle
+	circle.prev = circle
+
+	player := 1
+	for i := 1; i <= lastMarbleValue; i++ {
+		if i%23 == 0 {
+			for j := 0; j < 7; j++ {
+				circle = circle.prev
+			}
+			score[player] += (i + circle.v)
+			circle = circle.delete()
+		} else {
+			circle = circle.next.insert(i)
 		}
-
-		if currentMarbelValue%23 == 0 {
-			players[currentPlayer] += currentMarbelValue
-			seventh := abs((currentMarbleLocation - 6) % len(marbles))
-			// fmt.Println("Score of the seventh: ", marbles[seventh])
-			players[currentPlayer] += marbles[seventh]
-			currentMarbleLocation = abs((seventh - 1) % len(marbles))
-			currentMarbelValue++
-			marbles = append(marbles[:seventh], marbles[seventh+1:]...)
-			// fmt.Println(marbles, currentMarbleLocation, currentMarbelValue)
-			// fmt.Println("Marble value after removing: ", currentMarbleLocation)
-			// fmt.Println("Marble value after removing: ", currentMarbelValue)
-			continue
-		}
-
-		newIndex := abs((currentMarbleLocation + 2) % len(marbles))
-		currentMarbleLocation = newIndex
-		marbles = append(marbles[:newIndex+1], append([]int{currentMarbelValue}, marbles[newIndex+1:]...)...)
-
-		currentMarbelValue++
-		// fmt.Println(currentPlayer, marbles, currentMarbleLocation, currentMarbelValue)
+		player = (player + 1) % playerCount
 	}
 
 	max := 0
 	winner := 0
-	for k, v := range players {
-		if v > max {
-			max = v
-			winner = k
+	for i := 0; i < len(score); i++ {
+		if score[i] > max {
+			max = score[i]
+			winner = i
 		}
 	}
-	fmt.Printf("Winner is with score: %d and number: %d\n", max, winner)
-}
-
-func abs(a int) int {
-	if a < 0 {
-		return -a
-	}
-	return a
+	fmt.Printf("Player %d won with score: %d\n", winner, max)
 }
