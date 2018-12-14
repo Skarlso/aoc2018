@@ -30,9 +30,11 @@ func main() {
 	}
 
 	g := 0
-	plants = "........................." + plants + "............................"
+	offset := 0
 	fmt.Println(plants)
 	for g < generations {
+		plants = ".." + plants + ".."
+		offset += 2
 		newGeneration := plants
 		for i := 2; i < len(plants)-2; i++ {
 			match := plants[i-2 : i+3]
@@ -51,7 +53,7 @@ func main() {
 	sum := 0
 	for i, v := range plants {
 		if v == '#' {
-			sum += (i - 25)
+			sum += (i - offset)
 		}
 	}
 	fmt.Println(sum)
