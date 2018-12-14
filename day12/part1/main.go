@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	generations = 5
+	generations = 20
 )
 
 // TODO: Consider re-writing the whole thing as linked list because shuffling
@@ -35,7 +35,6 @@ func main() {
 	g := 0
 	negativOffset := 0
 	plantRunes := []rune(plants)
-	fmt.Println("PlantRunes length: ", len(plantRunes))
 	for g < generations {
 		begin := strings.Index(string(plantRunes), "#")
 		end := strings.LastIndex(string(plantRunes), "#") + 1
@@ -56,11 +55,12 @@ func main() {
 			negativOffset++
 			zeroLocation++
 		}
-		fmt.Println(string(plantRunes))
+		fmt.Println(len(plantRunes))
 		fmt.Println(begin, end)
 		newGeneration := make([]rune, len(plantRunes))
 		copy(newGeneration, plantRunes)
-		for i := begin; i <= end; i++ {
+		fmt.Println(begin, end)
+		for i := begin; i < end; i++ {
 			match := string(plantRunes[i-2]) + string(plantRunes[i-1]) + string(plantRunes[i]) + string(plantRunes[i+1]) + string(plantRunes[i+2])
 			if v, ok := rules[match]; ok {
 				newGeneration[i] = []rune(v)[0]
