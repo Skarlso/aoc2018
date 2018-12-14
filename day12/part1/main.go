@@ -35,14 +35,16 @@ func main() {
 	g := 0
 	negativOffset := 0
 	plantRunes := []rune(plants)
+	fmt.Println("PlantRunes length: ", len(plantRunes))
 	for g < generations {
 		begin := strings.Index(string(plantRunes), "#")
-		end := strings.LastIndex(string(plantRunes), "#")
+		end := strings.LastIndex(string(plantRunes), "#") + 1
 		if end+2 > len(plantRunes) && end+1 <= len(plantRunes) {
 			plantRunes = append(plantRunes, []rune("..")...)
-			end -= 2
+			// end--
 		} else if end+1 > len(plantRunes) {
 			plantRunes = append(plantRunes, []rune("..")...)
+			// end--
 		}
 		if begin-2 < 0 {
 			plantRunes = append([]rune(".."), plantRunes...)
@@ -56,16 +58,16 @@ func main() {
 		}
 		fmt.Println(string(plantRunes))
 		fmt.Println(begin, end)
-		newGeneration := make([]rune, 0)
+		newGeneration := make([]rune, len(plantRunes))
+		copy(newGeneration, plantRunes)
 		for i := begin; i <= end; i++ {
 			match := string(plantRunes[i-2]) + string(plantRunes[i-1]) + string(plantRunes[i]) + string(plantRunes[i+1]) + string(plantRunes[i+2])
 			if v, ok := rules[match]; ok {
-				newGeneration = append(newGeneration, []rune(v)...)
+				newGeneration[i] = []rune(v)[0]
 			} else {
-				newGeneration = append(newGeneration, []rune(".")...)
+				newGeneration[i] = '.'
 			}
 		}
-		fmt.Println(string(newGeneration))
 		plantRunes = newGeneration
 		fmt.Println(string(plantRunes))
 		g++
