@@ -8,40 +8,8 @@ import (
 )
 
 const (
-	generations = 20
+	generations = 5
 )
-
-type plant struct {
-	next  *plant
-	prev  *plant
-	value rune
-	index int
-}
-
-func (p *plant) add(value rune, index int) *plant {
-	if index < 0 {
-		p.prev = &plant{next: p, prev: nil, value: value, index: index}
-	} else {
-		p.next = &plant{next: nil, prev: p, value: value, index: index}
-	}
-	return p
-}
-
-func (p *plant) insert(v rune, i int) *plant {
-	newPlant := plant{value: v, index: i, next: nil, prev: nil}
-	nextPlant := p.next
-	p.next, nextPlant.prev = &newPlant, &newPlant
-	newPlant.prev, newPlant.next = p, nextPlant
-	return &newPlant
-}
-
-func (p *plant) evolveLeft() *plant {
-	return p
-}
-
-func (p *plant) evolveRight() *plant {
-	return p
-}
 
 // TODO: Consider re-writing the whole thing as linked list because shuffling
 // a huge String is really crap.
@@ -63,40 +31,43 @@ func main() {
 		}
 	}
 
-	firstPlantLocation := strings.Index(plants, "#")
-	hallway := &plant{
-		next:  nil,
-		prev:  nil,
-		value: '#',
-		index: firstPlantLocation,
-	}
-	// constructing plants
-	for i, r := range plants {
-		if i < firstPlantLocation {
-			p := plant{
-				next: nil,
-				prev:
-			}
-			continue
+	zeroLocation := strings.Index(plants, "#")
+	g := 0
+	negativOffset := 0
+	plantRunes := []rune(plants)
+	for g < generations {
+		begin := strings.Index(string(plantRunes), "#")
+		end := strings.LastIndex(string(plantRunes), "#")
+		if end+2 > len(plantRunes) && end+1 <= len(plantRunes) {
+			plantRunes = append(plantRunes, []rune("..")...)
+			end -= 2
+		} else if end+1 > len(plantRunes) {
+			plantRunes = append(plantRunes, []rune("..")...)
 		}
-
+		if begin-2 < 0 {
+			plantRunes = append([]rune(".."), plantRunes...)
+			negativOffset += 2
+			zeroLocation += 2
+			begin += 2
+		} else if begin-1 < 0 {
+			plantRunes = append([]rune(".."), plantRunes...)
+			negativOffset++
+			zeroLocation++
+		}
+		fmt.Println(string(plantRunes))
+		fmt.Println(begin, end)
+		newGeneration := make([]rune, 0)
+		for i := begin; i <= end; i++ {
+			match := string(plantRunes[i-2]) + string(plantRunes[i-1]) + string(plantRunes[i]) + string(plantRunes[i+1]) + string(plantRunes[i+2])
+			if v, ok := rules[match]; ok {
+				newGeneration = append(newGeneration, []rune(v)...)
+			} else {
+				newGeneration = append(newGeneration, []rune(".")...)
+			}
+		}
+		fmt.Println(string(newGeneration))
+		plantRunes = newGeneration
+		fmt.Println(string(plantRunes))
+		g++
 	}
-
-	// g := 0
-	// if firstPlantLocation < 5 {
-	// 	plants = "..." + plants
-	// }
-	// for g < generations {
-	// 	for i, r := range plants {
-	// 		if r == '#' {
-	// 			if i+2 > len(plants) {
-	// 				plants += ".."
-	// 			}
-	// 			if i-2 < 0 {
-	// 				plants = ".." + plants
-	// 			}
-
-	// 		}
-	// 	}
-	// }
 }
