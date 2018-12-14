@@ -11,8 +11,6 @@ const (
 	generations = 20
 )
 
-// TODO: Consider re-writing the whole thing as linked list because shuffling
-// a huge String is really crap.
 func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
@@ -31,45 +29,33 @@ func main() {
 		}
 	}
 
-	zeroLocation := strings.Index(plants, "#")
+	// zeroLocation := strings.Index(plants, "#")
 	g := 0
 	negativOffset := 0
 	plantRunes := []rune(plants)
+	fmt.Println(plants)
 	for g < generations {
-		begin := strings.Index(string(plantRunes), "#")
-		end := strings.LastIndex(string(plantRunes), "#") + 1
-		if end+2 > len(plantRunes) && end+1 <= len(plantRunes) {
-			plantRunes = append(plantRunes, []rune("..")...)
-			// end--
-		} else if end+1 > len(plantRunes) {
-			plantRunes = append(plantRunes, []rune("..")...)
-			// end--
-		}
-		if begin-2 < 0 {
-			plantRunes = append([]rune(".."), plantRunes...)
-			negativOffset += 2
-			zeroLocation += 2
-			begin += 2
-		} else if begin-1 < 0 {
-			plantRunes = append([]rune(".."), plantRunes...)
-			negativOffset++
-			zeroLocation++
-		}
-		fmt.Println(len(plantRunes))
-		fmt.Println(begin, end)
+		plantRunes = append(plantRunes, []rune("..")...)
+		plantRunes = append([]rune(".."), plantRunes...)
+		negativOffset -= 2
+
 		newGeneration := make([]rune, len(plantRunes))
 		copy(newGeneration, plantRunes)
-		fmt.Println(begin, end)
-		for i := begin; i < end; i++ {
+		for i := 2; i < len(plantRunes)-2; i++ {
 			match := string(plantRunes[i-2]) + string(plantRunes[i-1]) + string(plantRunes[i]) + string(plantRunes[i+1]) + string(plantRunes[i+2])
 			if v, ok := rules[match]; ok {
 				newGeneration[i] = []rune(v)[0]
-			} else {
-				newGeneration[i] = '.'
 			}
 		}
 		plantRunes = newGeneration
-		fmt.Println(string(plantRunes))
 		g++
 	}
+
+	sum := 0
+	for i, v := range plantRunes {
+		if v == '#' {
+			sum += i + negativOffset
+		}
+	}
+	fmt.Println(sum)
 }
