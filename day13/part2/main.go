@@ -27,6 +27,7 @@ type cart struct {
 	loc          coord
 	direction    rune
 	intersection int
+	dead         bool
 }
 
 type carts []*cart
@@ -34,10 +35,12 @@ type carts []*cart
 // Move moves the given cart into the direction that it's currently
 // facing. If the cart encounters an intersection it will change
 // its current heading.
-func (c *cart) move(cs carts) (int, int, bool) {
+func (c *cart) move(cs carts) bool {
 	c.loc.x += directions[c.direction].x
 	c.loc.y += directions[c.direction].y
 
+	// TODO: Use integers instead of rune to determine the directions
+	// This is too sloppy.
 	switch railroad[c.loc.y][c.loc.x] {
 	case '/':
 		if c.direction == '^' {
@@ -88,11 +91,12 @@ func (c *cart) move(cs carts) (int, int, bool) {
 
 	for _, other := range cs {
 		if c.compare(other) {
-			fmt.Println("CRASH!")
-			return c.loc.x, c.loc.y, true
+			other.dead = true
+			c.dead = true
+			return true
 		}
 	}
-	return c.loc.x, c.loc.y, false
+	return false
 }
 
 func (c *cart) compare(other *cart) bool {
@@ -128,6 +132,7 @@ func main() {
 					loc:          coord{x: x, y: y},
 					direction:    railroad[y][x],
 					intersection: 0,
+					dead:         false,
 				}
 				switch railroad[y][x] {
 				case '>', '<':
@@ -142,20 +147,19 @@ func main() {
 	}
 
 	crash := false
-	collisionX := 0
-	collisionY := 0
 	ticks := 0
-	for {
+	for len(cs) > 1 {
 		ticks++
-		collisionX, collisionY, crash = moveCarts(cs)
+		cs = moveCarts(cs)
 		if crash {
 			break
 		}
 		// display(railroad, cs)
 		// time.Sleep(500 * time.Millisecond)
+		// fmt.Println(cs)
 	}
 	fmt.Println(ticks)
-	fmt.Println(collisionX, collisionY)
+	fmt.Println("Last cart location: ", cs[0].loc)
 }
 
 func showCarts(cs carts) {
@@ -164,14 +168,19 @@ func showCarts(cs carts) {
 	}
 }
 
-func moveCarts(cs carts) (x int, y int, collision bool) {
+func moveCarts(cs carts) carts {
+	newCarts := make(carts, 0)
+	// cleanup := false
 	for _, c := range cs {
-		x, y, collision = c.move(cs)
-		if collision {
-			return x, y, collision
+		c.move(cs)
+	}
+
+	for _, c := range cs {
+		if !c.dead {
+			newCarts = append(newCarts, c)
 		}
 	}
-	return
+	return newCarts
 }
 
 func display(r [][]rune, cs carts) {
