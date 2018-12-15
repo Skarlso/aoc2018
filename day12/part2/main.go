@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	generations = 20
+	generations = 50000000000
 )
 
 func main() {
@@ -29,6 +29,9 @@ func main() {
 		}
 	}
 
+	// Future note: After a while it will start to even out and not change any longer
+	// that's when there is a formula:
+	// 50000000000 - current iteration * i * offset
 	g := 0
 	offset := 0
 	fmt.Println(plants)
