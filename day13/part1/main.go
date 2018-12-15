@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -27,10 +28,25 @@ type cart struct {
 	intersection int
 }
 
+type carts []*cart
+
+func (c carts) Len() int      { return len(c) }
+func (c carts) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c carts) Less(i, j int) bool {
+	if c[i].loc.y < c[j].loc.y {
+		return true
+	} else if c[i].loc.y == c[j].loc.y {
+		if c[i].loc.x < c[j].loc.x {
+			return true
+		}
+	}
+	return false
+}
+
 // Move moves the given cart into the direction that it's currently
 // facing. If the cart encounters an intersection it will change
 // its current heading.
-func (c *cart) move(carts []*cart) (int, int, bool) {
+func (c *cart) move(cs carts) (int, int, bool) {
 	c.loc.x += directions[c.direction].x
 	c.loc.y += directions[c.direction].y
 
@@ -64,7 +80,7 @@ func (c *cart) move(carts []*cart) (int, int, bool) {
 		c.intersection = (c.intersection + 1) % 3
 	}
 
-	for _, other := range carts {
+	for _, other := range cs {
 		if c.compare(other) {
 			fmt.Println("CRASH!")
 			return c.loc.x, c.loc.y, true
@@ -89,7 +105,7 @@ func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
 	lines := strings.Split(string(content), "\n")
-	carts := make([]*cart, 0)
+	cs := make(carts, 0)
 	for _, l := range lines {
 		railroad = append(railroad, []rune(l))
 	}
@@ -113,7 +129,7 @@ func main() {
 				case '^', 'v':
 					railroad[y][x] = '|'
 				}
-				carts = append(carts, &c)
+				cs = append(cs, &c)
 				id++
 			}
 		}
@@ -122,25 +138,30 @@ func main() {
 	crash := false
 	collisionX := 0
 	collisionY := 0
+	ticks := 0
 	for {
-		collisionX, collisionY, crash = moveCarts(carts)
+		ticks++
+		sort.Sort(cs)
+		// showCarts(cs)
+		collisionX, collisionY, crash = moveCarts(cs)
 		if crash {
 			break
 		}
+		// time.Sleep(1 * time.Second)
 	}
-
+	fmt.Println(ticks)
 	fmt.Println(collisionX, collisionY)
 }
 
-func showCarts(carts []*cart) {
-	for _, c := range carts {
+func showCarts(cs carts) {
+	for _, c := range cs {
 		fmt.Println(c)
 	}
 }
 
-func moveCarts(carts []*cart) (x int, y int, collision bool) {
-	for _, c := range carts {
-		x, y, collision = c.move(carts)
+func moveCarts(cs carts) (x int, y int, collision bool) {
+	for _, c := range cs {
+		x, y, collision = c.move(cs)
 		if collision {
 			return x, y, collision
 		}
