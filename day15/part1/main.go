@@ -106,7 +106,7 @@ func main() {
 			if r == 'G' {
 				g := enemy{
 					pos: coord{x: x, y: y},
-					hp:  100 + y,
+					hp:  200,
 					dmg: 3,
 					t:   'G',
 				}
@@ -114,7 +114,7 @@ func main() {
 			} else if r == 'E' {
 				e := enemy{
 					pos: coord{x: x, y: y},
-					hp:  100 + x,
+					hp:  200,
 					dmg: 3,
 					t:   'E',
 				}
