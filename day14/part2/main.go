@@ -31,7 +31,6 @@ func main() {
 		// pick new recipes
 		elfOne = ((scoreboard[elfOne] + 1) + elfOne) % len(scoreboard)
 		elfTwo = ((scoreboard[elfTwo] + 1) + elfTwo) % len(scoreboard)
-
 	}
 }
 
