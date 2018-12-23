@@ -68,7 +68,7 @@ func (e *enemy) scan() {
 		sort.Sort(enemySlice(nearby))
 		min := nearby[0]
 		for _, g := range nearby {
-			if min.hp < g.hp {
+			if min.hp > g.hp {
 				min = g
 			}
 		}
@@ -106,7 +106,7 @@ func main() {
 			if r == 'G' {
 				g := enemy{
 					pos: coord{x: x, y: y},
-					hp:  200,
+					hp:  100 + y,
 					dmg: 3,
 					t:   'G',
 				}
@@ -114,7 +114,7 @@ func main() {
 			} else if r == 'E' {
 				e := enemy{
 					pos: coord{x: x, y: y},
-					hp:  200,
+					hp:  100 + x,
 					dmg: 3,
 					t:   'E',
 				}
@@ -123,7 +123,7 @@ func main() {
 		}
 	}
 	display(playfield)
-
+	fmt.Println(enemies)
 	for {
 		sort.Sort(enemySlice(enemies))
 		for _, e := range enemies {
