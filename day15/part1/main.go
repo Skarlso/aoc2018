@@ -107,13 +107,18 @@ func (e *enemy) getShortestPath(g *enemy) (path []coord) {
 	visited := make([]coord, 0)
 	goal := g.pos
 	path = append(path, e.pos)
-
 	for len(path) > 0 {
-		current, path := path[0], path[1:]
-		moves :=
-
-		for _, m := range moves {
-
+		var current coord
+		current, path = path[0], path[1:]
+		if current == goal {
+			break
+		}
+		movesForCurrent := e.neighbours(current)
+		for _, m := range movesForCurrent {
+			if !contains(m, visited) {
+				visited = append(visited, m)
+				path = append(path, m)
+			}
 		}
 		fmt.Println(current)
 	}
@@ -121,15 +126,14 @@ func (e *enemy) getShortestPath(g *enemy) (path []coord) {
 	return path
 }
 
-func (e *enemy) neighbours(v []coord) (visited, paths []coord) {
-
-	if (!contains())
-	return v, paths
+func (e *enemy) neighbours(v coord) (paths []coord) {
+	// give back all the valid path around the given coordinate
+	return
 }
 
 func contains(v coord, r []coord) bool {
 	for _, c := range r {
-		if c.x == v.x && x.y == v.y {
+		if c.x == v.x && c.y == v.y {
 			return true
 		}
 	}
