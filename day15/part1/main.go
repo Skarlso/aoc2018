@@ -40,7 +40,7 @@ func (e *enemy) String() string {
 	return fmt.Sprintf("type: %s, x: %d, y: %d, hp: %d, dmg: %d;\n", string(e.t), e.pos.x, e.pos.y, e.hp, e.dmg)
 }
 
-func (e *enemy) scan() {
+func (e *enemy) scan() bool {
 	// Look around if there are elfs in the vicinity
 	// Actually, look around for enemies. Calculate their distances with manhattan
 	// if there is one with distance of 1 or several, put them into `near` list.
@@ -74,13 +74,70 @@ func (e *enemy) scan() {
 		}
 		fmt.Println("Attacks: ", min)
 		e.attack(min)
-		return
+		return true
 	}
 
+	var nearest *enemy
+	minDis := 10000000
+	// find something to attack
+	// enemies are sorted so when I'm going through them to find the
+	// nearest, I'm doing it in reading order anyways.
+	for _, g := range enemies {
+		if g.t != e.t {
+			dis := abs(e.pos.x-g.pos.x) + abs(e.pos.y-g.pos.y)
+			if dis < minDis {
+				if e.canReach(g) {
+					nearest = g
+					minDis = dis
+				}
+			}
+		}
+	}
+
+	if nearest == nil {
+		return false
+	}
+	// fmt.Println("Current: ", e)
+	// fmt.Println("Nearest: ", nearest)
+
+	return true
 }
 
-func (e *enemy) move() {
+func (e *enemy) getShortestPath(g *enemy) (path []coord) {
+	visited := make([]coord, 0)
+	goal := g.pos
+	path = append(path, e.pos)
 
+	for len(path) > 0 {
+		current, path := path[0], path[1:]
+		moves :=
+
+		for _, m := range moves {
+
+		}
+		fmt.Println(current)
+	}
+
+	return path
+}
+
+func (e *enemy) neighbours(v []coord) (visited, paths []coord) {
+
+	if (!contains())
+	return v, paths
+}
+
+func contains(v coord, r []coord) bool {
+	for _, c := range r {
+		if c.x == v.x && x.y == v.y {
+			return true
+		}
+	}
+	return false
+}
+
+func (e *enemy) canReach(g *enemy) bool {
+	return true
 }
 
 func (e *enemy) attack(g *enemy) {
@@ -123,13 +180,17 @@ func main() {
 		}
 	}
 	display(playfield)
-	fmt.Println(enemies)
+	count := 0
 	for {
 		sort.Sort(enemySlice(enemies))
 		for _, e := range enemies {
-			e.scan()
+			ret := e.scan()
+			if !ret {
+				fmt.Println("No more enemies remain after: ", count)
+				return
+			}
 		}
-		break
+		count++
 	}
 }
 
