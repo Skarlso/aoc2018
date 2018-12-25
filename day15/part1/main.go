@@ -42,6 +42,10 @@ func (e *enemy) String() string {
 }
 
 func (e *enemy) scan() bool {
+	removeDead()
+	if e.dead {
+		return false
+	}
 	// Look around if there are elfs in the vicinity
 	// Actually, look around for enemies. Calculate their distances with manhattan
 	// if there is one with distance of 1 or several, put them into `near` list.
@@ -74,36 +78,40 @@ func (e *enemy) scan() bool {
 				min = g
 			}
 		}
-		fmt.Println("Attacks: ", min)
+		// fmt.Println("Attacks: ", min)
 		e.attack(min)
 		return true
 	}
 
-	var nearest *enemy
-	var pathToNearest []coord
-	minDis := 10000000
+	// var nearest *enemy
+	// var pathToNearest []coord
+	var pathsToEnemies = make([][]coord, 0)
 	// find something to attack
 	// enemies are sorted so when I'm going through them to find the
 	// nearest, I'm doing it in reading order anyways.
+	// gather all path to all enemies if reachable and select the shortest.
 	for _, g := range enemies {
-		if (g.t != e.t) && (g.t != '.') {
-			dis := abs(e.pos.x-g.pos.x) + abs(e.pos.y-g.pos.y)
-			if dis < minDis {
-				if v, ok := e.canReach(g); ok {
-					nearest = g
-					pathToNearest = v
-					minDis = dis
-				}
+		if g.t != e.t {
+			if v, ok := e.canReach(g); ok {
+				pathsToEnemies = append(pathsToEnemies, v)
 			}
 		}
 	}
 
-	if nearest == nil {
+	if len(pathsToEnemies) < 1 {
 		return false
+	}
+
+	min := pathsToEnemies[0]
+	for _, p := range pathsToEnemies {
+		if len(p) < len(min) {
+			min = p
+		}
 	}
 	// fmt.Println("Current: ", e)
 	// fmt.Println("Nearest: ", nearest)
-	e.move(pathToNearest[len(pathToNearest)-1])
+	// fmt.Println("path to nearest: ", pathToNearest)
+	e.move(min[len(min)-1])
 	return true
 }
 
@@ -112,7 +120,7 @@ func (e *enemy) getPathTo(g *enemy) (path []coord) {
 	goal := g.pos
 	start := e.pos
 	path = append(path, start)
-	from[start] = start
+	from[start] = coord{y: -1, x: -1}
 	for len(path) > 0 {
 		var current coord
 		current, path = path[0], path[1:]
@@ -134,11 +142,24 @@ func (e *enemy) getPathTo(g *enemy) (path []coord) {
 		}
 	}
 
+	// if the goal is not in the list that means we can't reach it.
+	if _, ok := from[goal]; !ok {
+		return []coord{}
+	}
+
 	// Construct a path
 	allPath := make([]coord, 0)
 	current := goal
+
 	for current != start {
 		allPath = append(allPath, current)
+		// fmt.Println("current: ", current)
+		// fmt.Println("start: ", start)
+		// fmt.Println("goal: ", goal)
+		// fmt.Println("goblin: ", g)
+		// fmt.Println("attacker: ", e)
+		// fmt.Println(from)
+		// display(playfield)
 		current = from[current]
 	}
 	return allPath
@@ -159,6 +180,15 @@ func neighbours(v coord, e rune) (paths []coord) {
 		paths = append(paths, coord{x: v.x + right.x, y: v.y + right.y})
 	}
 	return
+}
+
+func removeDead() {
+	for i := 0; i < len(enemies); i++ {
+		if enemies[i].dead {
+			playfield[enemies[i].pos.y][enemies[i].pos.x] = '.'
+			enemies = append(enemies[:i], enemies[i+1:]...)
+		}
+	}
 }
 
 func contains(v coord, r []coord) bool {
@@ -241,6 +271,13 @@ func main() {
 		count++
 	}
 	fmt.Println("battle ended after: ", count)
+
+	sum := 0
+	for _, e := range enemies {
+		sum += e.hp
+	}
+	fmt.Println("health sum: ", sum)
+	fmt.Println("outcome: ", sum*count)
 }
 
 func display(r [][]rune) {
