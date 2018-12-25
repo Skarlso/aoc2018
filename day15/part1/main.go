@@ -97,7 +97,6 @@ func (e *enemy) scan() bool {
 		e.attack(min)
 		return true
 	}
-
 	// var nearest *enemy
 	// var pathToNearest []coord
 	var pathsToEnemies = make([][]coord, 0)
@@ -253,35 +252,42 @@ func main() {
 		for x, r := range l {
 			if r == 'G' {
 				g := enemy{
-					pos: coord{x: x, y: y},
-					hp:  200,
-					dmg: 3,
-					t:   'G',
+					pos:  coord{x: x, y: y},
+					hp:   200,
+					dmg:  3,
+					t:    'G',
+					dead: false,
 				}
 				enemies = append(enemies, &g)
 			} else if r == 'E' {
 				e := enemy{
-					pos: coord{x: x, y: y},
-					hp:  200,
-					dmg: 3,
-					t:   'E',
+					pos:  coord{x: x, y: y},
+					hp:   200,
+					dmg:  3,
+					t:    'E',
+					dead: false,
 				}
 				enemies = append(enemies, &e)
 			}
 		}
 	}
-	display(playfield)
 	count := 0
 	// because one enemy might say it can't reach any more
 	// but others might be attacking.
-	notDead := true
-	for notDead {
+	canReach := true
+	for canReach {
+		canReach = false
 		sort.Sort(enemySlice(enemies))
 		for _, e := range enemies {
-			notDead = e.scan()
+			reach := e.scan()
+			if !canReach && reach {
+				canReach = true
+			} else if !reach && canReach {
+				// do nothing
+			}
 		}
 
-		display(playfield)
+		// display(playfield)
 		// time.Sleep(200 * time.Millisecond)
 		count++
 	}
