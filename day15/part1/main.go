@@ -113,7 +113,7 @@ func (e *enemy) getShortestPath(g *enemy) (path []coord) {
 		if current == goal {
 			break
 		}
-		movesForCurrent := e.neighbours(current)
+		movesForCurrent := neighbours(current)
 		for _, m := range movesForCurrent {
 			if !contains(m, visited) {
 				visited = append(visited, m)
@@ -126,8 +126,20 @@ func (e *enemy) getShortestPath(g *enemy) (path []coord) {
 	return path
 }
 
-func (e *enemy) neighbours(v coord) (paths []coord) {
+func neighbours(v coord) (paths []coord) {
 	// give back all the valid path around the given coordinate
+	if playfield[v.y+up.y][v.x+up.x] == '.' {
+		paths = append(paths, coord{x: v.x + up.x, y: v.y + up.y})
+	}
+	if playfield[v.y+down.y][v.x+down.x] == '.' {
+		paths = append(paths, coord{x: v.x + down.x, y: v.y + down.y})
+	}
+	if playfield[v.y+left.y][v.x+left.x] == '.' {
+		paths = append(paths, coord{x: v.x + left.x, y: v.y + left.y})
+	}
+	if playfield[v.y+right.y][v.x+right.x] == '.' {
+		paths = append(paths, coord{x: v.x + right.x, y: v.y + right.y})
+	}
 	return
 }
 
