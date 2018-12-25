@@ -13,6 +13,21 @@ type coord struct {
 	y int
 }
 
+type coordSlice []coord
+
+func (c coordSlice) Len() int      { return len(c) }
+func (c coordSlice) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c coordSlice) Less(i, j int) bool {
+	if c[i].y < c[j].y {
+		return true
+	} else if c[i].y == c[j].y {
+		if c[i].x < c[j].x {
+			return true
+		}
+	}
+	return false
+}
+
 type enemySlice []*enemy
 
 func (c enemySlice) Len() int      { return len(c) }
@@ -167,17 +182,17 @@ func (e *enemy) getPathTo(g *enemy) (path []coord) {
 
 func neighbours(v coord, e rune) (paths []coord) {
 	// give back all the valid path around the given coordinate
-	if playfield[v.y+up.y][v.x+up.x] == '.' || playfield[v.y+up.y][v.x+up.x] == e {
-		paths = append(paths, coord{x: v.x + up.x, y: v.y + up.y})
-	}
-	if playfield[v.y+down.y][v.x+down.x] == '.' || playfield[v.y+down.y][v.x+down.x] == e {
-		paths = append(paths, coord{x: v.x + down.x, y: v.y + down.y})
+	if playfield[v.y+right.y][v.x+right.x] == '.' || playfield[v.y+right.y][v.x+right.x] == e {
+		paths = append(paths, coord{x: v.x + right.x, y: v.y + right.y})
 	}
 	if playfield[v.y+left.y][v.x+left.x] == '.' || playfield[v.y+left.y][v.x+left.x] == e {
 		paths = append(paths, coord{x: v.x + left.x, y: v.y + left.y})
 	}
-	if playfield[v.y+right.y][v.x+right.x] == '.' || playfield[v.y+right.y][v.x+right.x] == e {
-		paths = append(paths, coord{x: v.x + right.x, y: v.y + right.y})
+	if playfield[v.y+down.y][v.x+down.x] == '.' || playfield[v.y+down.y][v.x+down.x] == e {
+		paths = append(paths, coord{x: v.x + down.x, y: v.y + down.y})
+	}
+	if playfield[v.y+up.y][v.x+up.x] == '.' || playfield[v.y+up.y][v.x+up.x] == e {
+		paths = append(paths, coord{x: v.x + up.x, y: v.y + up.y})
 	}
 	return
 }
