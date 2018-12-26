@@ -13,21 +13,6 @@ type coord struct {
 	y int
 }
 
-type coordSlice []coord
-
-func (c coordSlice) Len() int      { return len(c) }
-func (c coordSlice) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
-func (c coordSlice) Less(i, j int) bool {
-	if c[i].y < c[j].y {
-		return true
-	} else if c[i].y == c[j].y {
-		if c[i].x < c[j].x {
-			return true
-		}
-	}
-	return false
-}
-
 // TODO: Instead of this the map could contain IDs of entites
 // the map then could be used to look up the entity in O(1)
 // instead of this slice which is O(n). This is unuseable in
@@ -101,8 +86,6 @@ func (e *enemy) scan() bool {
 		e.attack(min)
 		return true
 	}
-	// var nearest *enemy
-	// var pathToNearest []coord
 	var pathsToEnemies = make([][]coord, 0)
 	// find something to attack
 	// enemies are sorted so when I'm going through them to find the
@@ -126,9 +109,6 @@ func (e *enemy) scan() bool {
 			min = p
 		}
 	}
-	// fmt.Println("Current: ", e)
-	// fmt.Println("Nearest: ", nearest)
-	// fmt.Println("path to nearest: ", pathToNearest)
 	e.move(min[len(min)-1])
 	return true
 }
@@ -171,13 +151,6 @@ func (e *enemy) getPathTo(g *enemy) (path []coord) {
 
 	for current != start {
 		allPath = append(allPath, current)
-		// fmt.Println("current: ", current)
-		// fmt.Println("start: ", start)
-		// fmt.Println("goal: ", goal)
-		// fmt.Println("goblin: ", g)
-		// fmt.Println("attacker: ", e)
-		// fmt.Println(from)
-		// display(playfield)
 		current = from[current]
 	}
 	return allPath
@@ -209,19 +182,9 @@ func removeDead() {
 	}
 }
 
-func contains(v coord, r []coord) bool {
-	for _, c := range r {
-		if c.x == v.x && c.y == v.y {
-			return true
-		}
-	}
-	return false
-}
-
 func (e *enemy) move(newLocation coord) {
 	// update previous location to `.`
 	// and set new location
-	// fmt.Printf("Moving from %v to %v\n", e.pos, newLocation)
 	playfield[e.pos.y][e.pos.x], playfield[newLocation.y][newLocation.x] = '.', e.t
 	e.pos = newLocation
 }
@@ -276,8 +239,6 @@ func main() {
 		}
 	}
 	count := 0
-	// because one enemy might say it can't reach any more
-	// but others might be attacking.
 	canReach := true
 	for canReach {
 		canReach = false
@@ -286,13 +247,8 @@ func main() {
 			reach := e.scan()
 			if !canReach && reach {
 				canReach = true
-			} else if !reach && canReach {
-				// do nothing
 			}
 		}
-
-		// display(playfield)
-		// time.Sleep(200 * time.Millisecond)
 		count++
 	}
 	fmt.Println("battle ended after: ", count)
