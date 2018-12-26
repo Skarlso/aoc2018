@@ -6,6 +6,9 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/fatih/color"
 )
 
 type coord struct {
@@ -191,6 +194,8 @@ func (e *enemy) move(newLocation coord) {
 
 func (e *enemy) canReach(g *enemy) ([]coord, bool) {
 	path := e.getPathTo(g)
+	displayPath(path)
+	time.Sleep(1 * time.Second)
 	return path, len(path) > 0
 }
 
@@ -249,6 +254,8 @@ func main() {
 				canReach = true
 			}
 		}
+		display(playfield)
+		time.Sleep(1 * time.Second)
 		count++
 	}
 	fmt.Println("battle ended after: ", count)
@@ -268,6 +275,29 @@ func display(r [][]rune) {
 		}
 		fmt.Println()
 	}
+}
+
+func displayPath(path []coord) {
+	c := color.New(color.FgCyan).Add(color.Underline)
+	for y := 0; y < len(playfield); y++ {
+		for x := 0; x < len(playfield[y]); x++ {
+			if contains(coord{y: y, x: x}, path) {
+				c.Print(string(playfield[y][x]))
+			} else {
+				fmt.Print(string(playfield[y][x]))
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func contains(c coord, path []coord) bool {
+	for _, v := range path {
+		if v == c {
+			return true
+		}
+	}
+	return false
 }
 
 func abs(a int) int {
