@@ -28,6 +28,10 @@ func (c coordSlice) Less(i, j int) bool {
 	return false
 }
 
+// TODO: Instead of this the map could contain IDs of entites
+// the map then could be used to look up the entity in O(1)
+// instead of this slice which is O(n). This is unuseable in
+// case there are thousands of entities.
 type enemySlice []*enemy
 
 func (c enemySlice) Len() int      { return len(c) }
