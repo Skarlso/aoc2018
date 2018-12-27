@@ -8,18 +8,18 @@ import (
 
 type op struct {
 	name string
-	v    func(a, b, c uint64)
+	v    func(a, b, c int)
 }
 
 var (
-	registers = map[uint64]uint64{
+	registers = map[int]int{
 		0: 0,
 		1: 0,
 		2: 0,
 		3: 0,
 	}
 	// Initial values, these will change after we determine which is which.
-	opcodes = map[uint64]op{
+	opcodes = map[int]op{
 		0:  op{v: addr, name: "addr"},
 		1:  op{v: addi, name: "addi"},
 		2:  op{v: mulr, name: "mulr"},
@@ -37,50 +37,50 @@ var (
 		14: op{v: eqri, name: "eqri"},
 		15: op{v: eqrr, name: "eqrr"},
 	}
-	possibleOpCodes = make(map[uint64]op)
+	possibleOpCodes = make(map[int]op)
 )
 
-func addr(a, b, c uint64) {
+func addr(a, b, c int) {
 	registers[c] = registers[a] + registers[b]
 }
 
-func addi(a, b, c uint64) {
+func addi(a, b, c int) {
 	registers[c] = registers[a] + b
 }
 
-func mulr(a, b, c uint64) {
+func mulr(a, b, c int) {
 	registers[c] = registers[a] * registers[b]
 }
 
-func muli(a, b, c uint64) {
+func muli(a, b, c int) {
 	registers[c] = registers[a] * b
 }
 
-func banr(a, b, c uint64) {
+func banr(a, b, c int) {
 	registers[c] = registers[a] & registers[b]
 }
 
-func bani(a, b, c uint64) {
+func bani(a, b, c int) {
 	registers[c] = registers[a] & b
 }
 
-func borr(a, b, c uint64) {
+func borr(a, b, c int) {
 	registers[c] = registers[a] | registers[b]
 }
 
-func bori(a, b, c uint64) {
+func bori(a, b, c int) {
 	registers[c] = registers[a] | b
 }
 
-func setr(a, b, c uint64) {
+func setr(a, b, c int) {
 	registers[c] = registers[a]
 }
 
-func seti(a, b, c uint64) {
+func seti(a, b, c int) {
 	registers[c] = a
 }
 
-func gtir(a, b, c uint64) {
+func gtir(a, b, c int) {
 	if a > registers[b] {
 		registers[c] = 1
 	} else {
@@ -88,7 +88,7 @@ func gtir(a, b, c uint64) {
 	}
 }
 
-func gtri(a, b, c uint64) {
+func gtri(a, b, c int) {
 	if registers[a] > b {
 		registers[c] = 1
 	} else {
@@ -96,7 +96,7 @@ func gtri(a, b, c uint64) {
 	}
 }
 
-func gtrr(a, b, c uint64) {
+func gtrr(a, b, c int) {
 	if registers[a] > registers[b] {
 		registers[c] = 1
 	} else {
@@ -104,7 +104,7 @@ func gtrr(a, b, c uint64) {
 	}
 }
 
-func eqir(a, b, c uint64) {
+func eqir(a, b, c int) {
 	if a == registers[b] {
 		registers[c] = 1
 	} else {
@@ -112,7 +112,7 @@ func eqir(a, b, c uint64) {
 	}
 }
 
-func eqri(a, b, c uint64) {
+func eqri(a, b, c int) {
 	if registers[a] == b {
 		registers[c] = 1
 	} else {
@@ -120,7 +120,7 @@ func eqri(a, b, c uint64) {
 	}
 }
 
-func eqrr(a, b, c uint64) {
+func eqrr(a, b, c int) {
 	if registers[a] == registers[b] {
 		registers[c] = 1
 	} else {
@@ -137,12 +137,13 @@ func main() {
 	}
 	lines := strings.Split(string(content), "\n")
 	var (
-		before1, before2, before3, before4 uint64
-		after1, after2, after3, after4     uint64
-		opCode, a, b, c                    uint64
+		before1, before2, before3, before4 int
+		after1, after2, after3, after4     int
+		opCode, a, b, c                    int
 	)
 	// sampleCount := 0
-	for _, l := range lines {
+	for i := 0; i < len(lines); i++ {
+		l := lines[i]
 		if strings.Contains(l, "Before:") {
 			fmt.Sscanf(l, "Before: [%d, %d, %d, %d]", &before1, &before2, &before3, &before4)
 			continue
@@ -153,9 +154,8 @@ func main() {
 		}
 		if strings.Contains(l, "After:") {
 			fmt.Sscanf(l, "After: [%d, %d, %d, %d]", &after1, &after2, &after3, &after4)
-			matched := 0
-			var code uint64
-			var f func(a, b, c uint64)
+			var matched []int
+			// var code int
 			for k, v := range opcodes {
 				registers[0] = before1
 				registers[1] = before2
@@ -167,20 +167,21 @@ func main() {
 					registers[1] == after2 &&
 					registers[2] == after3 &&
 					registers[3] == after4 {
-					matched++
-					code = k
-					f = v.v
+					matched = append(matched, k)
 				}
 			}
-			if matched == 1 {
-				if _, ok := possibleOpCodes[code]; !ok {
-					possibleOpCodes[code] = op{name: "asdf", v: f}
+			if len(matched) == 1 {
+				if _, ok := possibleOpCodes[opCode]; !ok {
+					o := opcodes[matched[0]]
+					possibleOpCodes[opCode] = op{name: o.name, v: o.v}
+					delete(opcodes, matched[0])
+					i = 0
 				}
 			}
 			continue
 		}
 	}
-	fmt.Println(possibleOpCodes)
+
 	// part 2
 	f := "input2.txt"
 	con, err := ioutil.ReadFile(f)
@@ -188,16 +189,15 @@ func main() {
 		panic(err)
 	}
 	ls := strings.Split(string(con), "\n")
-	registers = map[uint64]uint64{
+	registers = map[int]int{
 		0: 0,
 		1: 0,
 		2: 0,
 		3: 0,
 	}
 	for _, l := range ls {
-		fmt.Println(registers)
 		var (
-			code, a2, b2, c2 uint64
+			code, a2, b2, c2 int
 		)
 		fmt.Sscanf(l, "%d %d %d %d", &code, &a2, &b2, &c2)
 		possibleOpCodes[code].v(a2, b2, c2)
