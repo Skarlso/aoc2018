@@ -7,15 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	// OPEN .
-	OPEN = iota
-	// TREE |
-	TREE
-	// LUMBERYARD #
-	LUMBERYARD
-)
-
 type coord struct {
 	x int
 	y int
@@ -49,42 +40,45 @@ func main() {
 	maxY = len(field)
 
 	display(field)
-}
 
-func gatherAcres(x, y int) {
-	// x-2
-	// y-2
-	// x-2, y-2
-	// x-2, y
-	// x, y-2
-	//
-}
-
-func getAcreType(x, y int) int {
-	lumberyard := 0
-	trees := 0
-	open := 0
-	for _, d := range directions {
-		if x+d.x > 0 && x+d.x < maxX && y+d.y < maxY && y+d.y > 0 {
-			if field[y][x] == '#' {
-				lumberyard++
-			} else if field[y][x] == '|' {
-				trees++
-			} else if field[y][x] == '.' {
-				open++
-			}
+	for y := 0; y < maxY; y++ {
+		for x := 0; x < maxX; x++ {
+			getNeighbours(x, y)
 		}
 	}
-	if lumberyard == 8 {
-		return LUMBERYARD
+}
+
+func getNeighbours(x, y int) {
+	types := make(map[rune]int)
+
+	if x+1 < maxX && y+1 < maxY {
+		types[field[y+1][x+1]]++
 	}
-	if trees == 8 {
-		return TREE
+	if x-1 > 0 && y+1 < maxY {
+		types[field[y+1][x-1]]++
 	}
-	if open == 8 {
-		return OPEN
+	if y+1 < maxY {
+		types[field[y+1][x]]++
 	}
-	return -1
+	if x+1 < maxX {
+		types[field[y][x+1]]++
+	}
+	if x+1 < maxX && y-1 > 0 {
+		types[field[y-1][x+1]]++
+	}
+	if y-1 > 0 {
+		types[field[y-1][x]]++
+	}
+	if x-1 > 0 && y-1 > 0 {
+		types[field[y-1][x-1]]++
+	}
+	if x-1 > 0 {
+		types[field[y][x-1]]++
+	}
+	lumberyard := types['#']
+	open := types['.']
+	trees := types['|']
+	fmt.Printf("x:%d y:%d lumberyard:%d trees:%d open:%d\n", x, y, lumberyard, trees, open)
 }
 
 func display(r [][]rune) {
