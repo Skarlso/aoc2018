@@ -28,8 +28,13 @@ func main() {
 
 	maxY = len(field)
 
+	// calculate when it starts to begin again.
+	prev := make(map[int]int, 0)
 	minutes := 0
-	for minutes < 131 {
+	found := false
+	prevMinuteMark := 0
+	for minutes < 1000000000 {
+
 		newField := make([][]rune, maxY)
 		for i := 0; i < maxX; i++ {
 			newField[i] = make([]rune, maxX)
@@ -54,24 +59,38 @@ func main() {
 				newField[y][x] = currentAcre
 			}
 		}
-		minutes++
 		field = newField
-	}
-
-	lumber := 0
-	tree := 0
-	for _, i := range field {
-		for _, j := range i {
-			if j == '|' {
-				tree++
-			}
-			if j == '#' {
-				lumber++
+		lumber := 0
+		tree := 0
+		for _, i := range field {
+			for _, j := range i {
+				if j == '|' {
+					tree++
+				}
+				if j == '#' {
+					lumber++
+				}
 			}
 		}
-	}
+		if _, ok := prev[lumber*tree]; ok {
+			if found {
+				fmt.Println("ocured again at: ", minutes)
+				break
+			}
+			fmt.Println("started to recur at minute: ", minutes)
+			found = true
+			prevMinuteMark = minutes
+		}
 
-	fmt.Println("tree * lumber: ", tree*lumber)
+		prev[lumber*tree] = minutes
+		minutes++
+	}
+	freq := minutes - prevMinuteMark
+	loc := abs(1000000000-minutes) % freq
+	fmt.Println(1000000000 - minutes)
+	fmt.Println("resource: ", loc)
+	fmt.Println(prev)
+	// fmt.Println("Freq: ", minutes-prevMinuteMark)
 }
 
 func getNeighbours(x, y int) map[rune]int {
@@ -115,4 +134,11 @@ func display(r [][]rune) {
 		}
 		fmt.Println()
 	}
+}
+
+func abs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
 }
