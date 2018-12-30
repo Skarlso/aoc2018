@@ -54,7 +54,7 @@ func getNeighbours(x, y int) {
 	if x+1 < maxX && y+1 < maxY {
 		types[field[y+1][x+1]]++
 	}
-	if x-1 > 0 && y+1 < maxY {
+	if x-1 >= 0 && y+1 < maxY {
 		types[field[y+1][x-1]]++
 	}
 	if y+1 < maxY {
@@ -63,16 +63,16 @@ func getNeighbours(x, y int) {
 	if x+1 < maxX {
 		types[field[y][x+1]]++
 	}
-	if x+1 < maxX && y-1 > 0 {
+	if x+1 < maxX && y-1 >= 0 {
 		types[field[y-1][x+1]]++
 	}
-	if y-1 > 0 {
+	if y-1 >= 0 {
 		types[field[y-1][x]]++
 	}
-	if x-1 > 0 && y-1 > 0 {
+	if x-1 >= 0 && y-1 >= 0 {
 		types[field[y-1][x-1]]++
 	}
-	if x-1 > 0 {
+	if x-1 >= 0 {
 		types[field[y][x-1]]++
 	}
 	lumberyard := types['#']
