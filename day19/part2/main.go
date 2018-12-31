@@ -1,7 +1,8 @@
 package main
 
-// https://www.wolframalpha.com/input/?i=sum+of+factors
 // Get the factor later on.
+// Registers:  map[0:0 1:10550400 2:35 3:10551374 4:0 5:0]
+// once reg 0 is 0 that's when it starts to accumulate the factors.
 
 import (
 	"fmt"
@@ -152,6 +153,9 @@ func main() {
 		fmt.Sscanf(lines[registers[pcri]], "%s %d %d %d", &op, &a, &b, &c)
 		opcodes[op](a, b, c)
 		registers[pcri]++
+		if registers[0] == 0 {
+			fmt.Println("Registers: ", registers)
+			break
+		}
 	}
-	fmt.Println("Registers: ", registers)
 }
