@@ -1,5 +1,8 @@
 package main
 
+// https://www.wolframalpha.com/input/?i=sum+of+factors
+// Get the factor later on.
+
 import (
 	"fmt"
 	"io/ioutil"
@@ -11,7 +14,7 @@ var (
 	// Program Counter Register Index. Keep a separate track of the ip.
 	pcri      = 0
 	registers = map[int]int{
-		0: 0,
+		0: 1,
 		1: 0,
 		2: 0,
 		3: 0,
