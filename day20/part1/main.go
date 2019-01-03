@@ -6,44 +6,33 @@ import (
 	"os"
 )
 
-// every step is a door
-// #####
-// #.|.#
-// #-###
-// #.|X#
-// #####
-// construct a map first
-// after that we need to do a path search
-
 type coord struct {
 	x int
 	y int
 }
 
 type pos struct {
-	pos      coord
-	distance int
+	pos   coord
+	doors int
 }
 
 var (
-	up       = coord{x: 0, y: -1}
-	down     = coord{x: 0, y: +1}
-	left     = coord{x: -1, y: 0}
-	right    = coord{x: 1, y: 0}
-	floorMap = make([][]rune, 1)
+	up    = coord{x: 0, y: -1}
+	down  = coord{x: 0, y: +1}
+	left  = coord{x: -1, y: 0}
+	right = coord{x: 1, y: 0}
 )
 
 func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
-	floorMap[0] = make([]rune, 1)
 	c := coord{x: 0, y: 0}
-	distance := 0
+	doorCount := 0
 	stack := make([]pos, 0)
-	distances := make(map[coord]int, 0)
-	// inf := int(math.Inf(0))
+	doors := make(map[coord]int, 0)
 	for _, r := range content {
-		if r == 'N' || r == 'E' || r == 'W' || r == 'S' {
+		switch r {
+		case 'N', 'E', 'W', 'S':
 			if r == 'N' {
 				c.x = c.x + up.x
 				c.y = c.y + up.y
@@ -61,25 +50,24 @@ func main() {
 				c.y = c.y + left.y
 			}
 
-			distance++
-			if v, ok := distances[c]; ok {
-				distances[c] = min(distance, v)
+			doorCount++
+			if v, ok := doors[c]; ok {
+				doors[c] = min(doorCount, v)
 			} else {
-				distances[c] = distance
+				doors[c] = doorCount
 			}
-		} else if r == '(' {
-			stack = append(stack, pos{pos: c, distance: distance})
-		} else if r == ')' {
+		case '(':
+			stack = append(stack, pos{pos: c, doors: doorCount})
+		case ')':
 			var p pos
 			p, stack = stack[len(stack)-1], stack[:len(stack)-1]
-			c, distance = p.pos, p.distance
-		} else if r == '|' {
-			var p pos
-			p = stack[len(stack)-1]
-			c, distance = p.pos, p.distance
+			c, doorCount = p.pos, p.doors
+		case '|':
+			p := stack[len(stack)-1]
+			c, doorCount = p.pos, p.doors
 		}
 	}
-	fmt.Println(max(distances))
+	fmt.Println(max(doors))
 }
 
 func min(a, b int) int {
