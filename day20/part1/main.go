@@ -20,6 +20,11 @@ type coord struct {
 	y int
 }
 
+type pos struct {
+	pos      coord
+	distance int
+}
+
 var (
 	up       = coord{x: 0, y: -1}
 	down     = coord{x: 0, y: +1}
@@ -32,49 +37,64 @@ func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
 	floorMap[0] = make([]rune, 1)
-	cx := 0
-	cy := 0
-	// once I encounter a ( I need the final closing ) and the string in between.
-	for i := 0; i < len(content); i++ {
-		switch content[i] {
-		case 'N':
-			cx += up.x
-			cy += up.y
-		case 'E':
-			cx += right.x
-			cy += right.y
-		case 'S':
-			cx += down.x
-			cy += down.y
-		case 'W':
-			cx += left.x
-			cy += left.y
-		case '(':
-			// continue from after these have been parsed and handled
-			i += parseBranch(string(content[i+1:]))
+	c := coord{x: 0, y: 0}
+	distance := 0
+	stack := make([]pos, 0)
+	distances := make(map[coord]int, 0)
+	// inf := int(math.Inf(0))
+	for _, r := range content {
+		if r == 'N' || r == 'E' || r == 'W' || r == 'S' {
+			if r == 'N' {
+				c.x = c.x + up.x
+				c.y = c.y + up.y
+			}
+			if r == 'E' {
+				c.x = c.x + right.x
+				c.y = c.y + right.y
+			}
+			if r == 'S' {
+				c.x = c.x + down.x
+				c.y = c.y + down.y
+			}
+			if r == 'W' {
+				c.x = c.x + left.x
+				c.y = c.y + left.y
+			}
+
+			distance++
+			if v, ok := distances[c]; ok {
+				distances[c] = min(distance, v)
+			} else {
+				distances[c] = distance
+			}
+		} else if r == '(' {
+			stack = append(stack, pos{pos: c, distance: distance})
+		} else if r == ')' {
+			var p pos
+			p, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			c, distance = p.pos, p.distance
+		} else if r == '|' {
+			var p pos
+			p = stack[len(stack)-1]
+			c, distance = p.pos, p.distance
 		}
 	}
+	fmt.Println(max(distances))
 }
 
-// parseBranch returns the index at which to continue?
-func parseBranch(branch string) (index int) {
-	// we encountered the open paranethesis.
-	depth := 1
-	for i := 0; i < len(branch); i++ {
-		if branch[i] == ')' {
-			depth--
-		} else if branch[i] == '(' {
-			depth++
-			offset := parseBranch(branch[i+1:])
-			i += offset
-			index += offset
-		}
-		if depth == 0 {
-			break
-		}
-		index++
+func min(a, b int) int {
+	if a < b {
+		return a
 	}
-	branchString := branch[:index]
-	fmt.Println("branch: ", branchString)
-	return
+	return b
+}
+
+func max(a map[coord]int) int {
+	m := 0
+	for _, v := range a {
+		if v > m {
+			m = v
+		}
+	}
+	return m
 }
