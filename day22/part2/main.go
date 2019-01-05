@@ -8,17 +8,19 @@ import (
 )
 
 type coord struct {
-	x     int
-	y     int
-	index int
-	t     int
+	x        int
+	y        int
+	gear     int
+	index    int
+	priority int
 }
 
 type pathPrioQueue []*coord
 
 func (pq pathPrioQueue) Len() int { return len(pq) }
 func (pq pathPrioQueue) Less(i, j int) bool {
-	return pq[i].cost < pq[j].cost
+	// implement the cost logic here?
+	return pq[i].priority < pq[j].priority
 }
 
 func (pq pathPrioQueue) Swap(i, j int) {
@@ -44,17 +46,37 @@ func (pq *pathPrioQueue) Pop() interface{} {
 }
 
 // update modifies the priority and value of an Item in the queue.
-func (pq *pathPrioQueue) update(item *coord, x, y int, t int) {
+func (pq *pathPrioQueue) update(item *coord, x, y int, p int) {
 	item.x = x
 	item.y = y
-	item.t = t
+	item.priority = p
 	heap.Fix(pq, item.index)
+}
+
+func cost(from coord, to coord, gear int, cave [][]region) (moveCost int, switchedGear int) {
+	if cave[from.y][from.x].t != cave[to.y][to.x].t {
+		toType := cave[to.y][to.x].t
+
+		if (toType == rocky || toType == narrow) && from.gear == torch {
+			return basicMoveCost, from.gear
+		}
+
+		if toType == wet && from.gear == torch {
+			return gearSwitchCost, neither
+		}
+
+		if toType == rocky && from.gear == neither {
+			return gearSwitchCost, torch
+		}
+	}
+	return basicMoveCost, from.gear
 }
 
 type region struct {
 	geoindex int
 	erosion  int
 	t        int
+	gear     int
 }
 
 func (r *region) String() string {
@@ -68,26 +90,21 @@ const (
 )
 
 const (
-	neither = iota
-	torch
-	gear
+	torch = iota
+	neither
+	climbingGear // never use this
 )
-
-type santa struct {
-	pos      coord
-	heldTool int
-}
 
 var (
 	// depth  = 5355
 	// target = coord{x: 14, y: 796}
-	depth  = 510
-	target = coord{x: 10, y: 10, t: 0}
-	maxX   = target.x + 10
-	maxY   = target.y + 10
+	depth          = 510
+	target         = coord{x: 10, y: 10, priority: 0}
+	maxX           = target.x + 10
+	maxY           = target.y + 10
+	basicMoveCost  = 1
+	gearSwitchCost = 7
 )
-
-var allPath = make([][]coord, 0)
 
 func neighbours(c coord, cave [][]region) (paths []coord) {
 	// calculate and add movement cost if switching is needed.
@@ -149,50 +166,51 @@ func main() {
 		}
 	}
 
-	s := santa{
-		heldTool: torch,
-		pos:      coord{y: 0, x: 0},
-	}
-
-	// paths := make([][]coord, 0)
-	// path := make([]coord, 0)
-	path := make(pathPrioQueue, 0)
-	visited := make(map[coord]coord, 0)
+	path := make(pathPrioQueue, 1)
+	from := make(map[coord]*coord, 0)
 	goal := target
-	start := s.pos
-	start.t = 0
-	// path = append(path, start)
-	path.Push(start)
-	visited[start] = coord{y: -1, x: -1}
-	// visited[start] = true
-	// sofar := make([]coord, 0)
-	// cost so far
+	start := coord{x: 0, y: 0, priority: 0, index: 0, gear: torch}
+	start.priority = 0
+	path[0] = &start
+	heap.Init(&path)
+	from[start] = &coord{y: -1, x: -1}
+	costSoFar := make(map[coord]int)
+	costSoFar[start] = 0
 	for len(path) > 0 {
-		var current coord
-		current, path = path[0], path[1:]
+		current := *path.Pop().(*coord)
 		if current == goal {
-			// paths = append(paths, sofar)
-			// sofar = make([]coord, 0)
+			if current.gear != torch {
+				costSoFar[current] += gearSwitchCost
+				current.gear = torch
+			}
 			break
 		}
 		moves := neighbours(current, cave)
-		for _, m := range moves {
-			if _, ok := visited[m]; !ok {
-				visited[m] = current
-				path = append(path, m)
-				// sofar = append(sofar, m)
+		for _, next := range moves {
+			moveCost, newGear := cost(current, next, current.gear, cave)
+			newCost := costSoFar[current] + moveCost
+
+			if _, ok := costSoFar[next]; !ok || newCost < costSoFar[next] {
+				next.gear = newGear
+				costSoFar[next] = newCost
+				priority := newCost + distance(goal, next)
+				next.priority = priority
+				// path.Push(next)
+				heap.Push(&path, &next)
+				path.update(&next, next.x, next.y, priority)
+				from[next] = &current
 			}
 		}
 	}
+	fmt.Println(path)
+	// allPath := make([]coord, 0)
+	// current := goal
 
-	allPath := make([]coord, 0)
-	current := goal
-
-	for current != start {
-		allPath = append(allPath, current)
-		current = visited[current]
-	}
-	displayPath(allPath, cave)
+	// for current != start {
+	// 	allPath = append(allPath, current)
+	// 	current = *from[current]
+	// }
+	// displayPath(allPath, cave)
 }
 
 func display(r [][]region) {
@@ -246,4 +264,15 @@ func contains(c coord, path []coord) bool {
 		}
 	}
 	return false
+}
+
+func abs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
+}
+
+func distance(a, b coord) int {
+	return abs(a.x-b.x) + abs(a.y-b.y)
 }
