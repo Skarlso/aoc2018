@@ -3,13 +3,18 @@ package main
 import (
 	"container/heap"
 	"fmt"
+	"time"
 
 	"github.com/fatih/color"
 )
 
+type pos struct {
+	x int
+	y int
+}
+
 type coord struct {
-	x        int
-	y        int
+	p        pos
 	gear     int
 	index    int
 	priority int
@@ -20,7 +25,7 @@ type pathPrioQueue []*coord
 func (pq pathPrioQueue) Len() int { return len(pq) }
 func (pq pathPrioQueue) Less(i, j int) bool {
 	// implement the cost logic here?
-	return pq[i].priority < pq[j].priority
+	return pq[i].priority > pq[j].priority
 }
 
 func (pq pathPrioQueue) Swap(i, j int) {
@@ -47,14 +52,14 @@ func (pq *pathPrioQueue) Pop() interface{} {
 
 // update modifies the priority and value of an Item in the queue.
 func (pq *pathPrioQueue) update(item *coord, x, y int, p int) {
-	item.x = x
-	item.y = y
+	item.p.x = x
+	item.p.y = y
 	item.priority = p
 	heap.Fix(pq, item.index)
 }
 
-func cost(from coord, to coord, gear int, cave [][]region) (moveCost int, switchedGear int) {
-	if cave[from.y][from.x].t != cave[to.y][to.x].t {
+func cost(from coord, to pos, cave [][]region) (moveCost int, switchedGear int) {
+	if cave[from.p.y][from.p.x].t != cave[to.y][to.x].t {
 		toType := cave[to.y][to.x].t
 
 		if (toType == rocky || toType == narrow) && from.gear == torch {
@@ -99,7 +104,7 @@ var (
 	// depth  = 5355
 	// target = coord{x: 14, y: 796}
 	depth          = 510
-	target         = coord{x: 10, y: 10, priority: 0}
+	target         = pos{x: 10, y: 10}
 	maxX           = target.x + 10
 	maxY           = target.y + 10
 	basicMoveCost  = 1
@@ -109,17 +114,29 @@ var (
 func neighbours(c coord, cave [][]region) (paths []coord) {
 	// calculate and add movement cost if switching is needed.
 	// fmt.Println(c)
-	if c.x+1 < len(cave[c.y]) {
-		paths = append(paths, coord{x: c.x + 1, y: c.y})
+
+	//
+	if c.p.x+1 < len(cave[c.p.y]) {
+		to := pos{x: c.p.x + 1, y: c.p.y}
+		_, g := cost(c, to, cave)
+		paths = append(paths, coord{p: to, gear: g})
 	}
-	if c.x-1 > 0 {
-		paths = append(paths, coord{x: c.x - 1, y: c.y})
+	if c.p.x-1 > 0 {
+		to := pos{x: c.p.x - 1, y: c.p.y}
+		_, g := cost(c, to, cave)
+		paths = append(paths, coord{p: to, gear: g})
 	}
-	if c.y+1 < len(cave) {
-		paths = append(paths, coord{x: c.x, y: c.y + 1})
+	if c.p.y+1 < len(cave) {
+		to := pos{x: c.p.x, y: c.p.y + 1}
+		_, g := cost(c, to, cave)
+		paths = append(paths, coord{p: to, gear: g})
+		// paths = append(paths, pos{x: c.x, y: c.y + 1})
 	}
-	if c.y-1 >= 0 {
-		paths = append(paths, coord{x: c.x, y: c.y - 1})
+	if c.p.y-1 >= 0 {
+		to := pos{x: c.p.x, y: c.p.y - 1}
+		_, g := cost(c, to, cave)
+		paths = append(paths, coord{p: to, gear: g})
+		// paths = append(paths, pos{x: c.x, y: c.y - 1})
 	}
 	return
 }
@@ -167,42 +184,43 @@ func main() {
 	}
 
 	path := make(pathPrioQueue, 1)
-	from := make(map[coord]*coord, 0)
+	from := make(map[pos]*coord, 0)
 	goal := target
-	start := coord{x: 0, y: 0, priority: 0, index: 0, gear: torch}
-	start.priority = 0
+	start := coord{p: pos{x: 0, y: 0}, priority: 0, index: 0, gear: torch}
 	path[0] = &start
 	heap.Init(&path)
-	from[start] = &coord{y: -1, x: -1}
-	costSoFar := make(map[coord]int)
-	costSoFar[start] = 0
+	from[start.p] = &coord{p: pos{y: -1, x: -1}}
+	costSoFar := make(map[pos]int)
+	costSoFar[start.p] = 0
 	for len(path) > 0 {
 		current := *path.Pop().(*coord)
-		if current == goal {
+		time.Sleep(time.Millisecond * 500)
+		fmt.Printf("current: %v, goal: %v \n", current, goal)
+		if current.p == goal {
+			fmt.Printf("current: %v; goal: %v\n", current, goal)
 			if current.gear != torch {
-				costSoFar[current] += gearSwitchCost
+				costSoFar[current.p] += gearSwitchCost
 				current.gear = torch
 			}
 			break
 		}
 		moves := neighbours(current, cave)
 		for _, next := range moves {
-			moveCost, newGear := cost(current, next, current.gear, cave)
-			newCost := costSoFar[current] + moveCost
+			moveCost, newGear := cost(current, next.p, cave)
+			newCost := costSoFar[current.p] + moveCost
 
-			if _, ok := costSoFar[next]; !ok || newCost < costSoFar[next] {
+			if _, ok := costSoFar[next.p]; !ok || newCost < costSoFar[next.p] {
 				next.gear = newGear
-				costSoFar[next] = newCost
-				priority := newCost + distance(goal, next)
+				costSoFar[next.p] = newCost
+				priority := newCost + distance(goal, next.p)
 				next.priority = priority
-				// path.Push(next)
-				heap.Push(&path, &next)
-				path.update(&next, next.x, next.y, priority)
-				from[next] = &current
+				path.Push(&next)
+				path.update(&next, next.p.x, next.p.y, priority)
+				from[next.p] = &current
 			}
 		}
 	}
-	fmt.Println(path)
+	fmt.Println(from)
 	// allPath := make([]coord, 0)
 	// current := goal
 
@@ -229,11 +247,11 @@ func display(r [][]region) {
 	}
 }
 
-func displayPath(path []coord, cave [][]region) {
+func displayPath(path []pos, cave [][]region) {
 	c := color.New(color.FgCyan).Add(color.Underline)
 	for y := 0; y < len(cave); y++ {
 		for x := 0; x < len(cave[y]); x++ {
-			if contains(coord{y: y, x: x}, path) {
+			if contains(pos{y: y, x: x}, path) {
 				switch cave[y][x].t {
 				case rocky:
 					c.Print(".")
@@ -257,7 +275,7 @@ func displayPath(path []coord, cave [][]region) {
 	}
 }
 
-func contains(c coord, path []coord) bool {
+func contains(c pos, path []pos) bool {
 	for _, v := range path {
 		if v == c {
 			return true
@@ -273,6 +291,6 @@ func abs(a int) int {
 	return a
 }
 
-func distance(a, b coord) int {
+func distance(a, b pos) int {
 	return abs(a.x-b.x) + abs(a.y-b.y)
 }
