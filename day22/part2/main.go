@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -9,8 +10,8 @@ import (
 type coord struct {
 	x     int
 	y     int
-	cost  int
 	index int
+	t     int
 }
 
 type pathPrioQueue []*coord
@@ -42,13 +43,13 @@ func (pq *pathPrioQueue) Pop() interface{} {
 	return item
 }
 
-// // update modifies the priority and value of an Item in the queue.
-// func (pq *pathPrioQueue) update(item *coord, x, y int, cost int) {
-// 	item.x = x
-// 	item.y = y
-// 	item.cost = cost
-// 	heap.Fix(pq, item.index)
-// }
+// update modifies the priority and value of an Item in the queue.
+func (pq *pathPrioQueue) update(item *coord, x, y int, t int) {
+	item.x = x
+	item.y = y
+	item.t = t
+	heap.Fix(pq, item.index)
+}
 
 type region struct {
 	geoindex int
@@ -81,7 +82,7 @@ var (
 	// depth  = 5355
 	// target = coord{x: 14, y: 796}
 	depth  = 510
-	target = coord{x: 10, y: 10}
+	target = coord{x: 10, y: 10, t: 0}
 	maxX   = target.x + 10
 	maxY   = target.y + 10
 )
@@ -154,11 +155,14 @@ func main() {
 	}
 
 	// paths := make([][]coord, 0)
-	path := make([]coord, 0)
+	// path := make([]coord, 0)
+	path := make(pathPrioQueue, 0)
 	visited := make(map[coord]coord, 0)
 	goal := target
 	start := s.pos
-	path = append(path, start)
+	start.t = 0
+	// path = append(path, start)
+	path.Push(start)
 	visited[start] = coord{y: -1, x: -1}
 	// visited[start] = true
 	// sofar := make([]coord, 0)
