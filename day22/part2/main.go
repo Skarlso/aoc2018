@@ -70,11 +70,11 @@ func cost(from coord, to pos, cave [][]region) (moveCost int, switchedGear int) 
 		}
 
 		if toType == wet && from.gear == torch {
-			return gearSwitchCost, neither
+			return basicMoveCost + gearSwitchCost, neither
 		}
 
 		if toType == rocky && from.gear == neither {
-			return gearSwitchCost, torch
+			return basicMoveCost + gearSwitchCost, torch
 		}
 	}
 	return basicMoveCost, from.gear
@@ -104,12 +104,12 @@ const (
 )
 
 var (
-	// depth  = 5355
-	// target = coord{x: 14, y: 796}
-	depth          = 510
-	target         = pos{x: 10, y: 10}
-	maxX           = target.x + 10
-	maxY           = target.y + 10
+	depth  = 5355
+	target = pos{x: 14, y: 796}
+	// depth          = 510
+	// target         = pos{x: 10, y: 10}
+	maxX           = target.x + 30
+	maxY           = target.y + 30
 	basicMoveCost  = 1
 	gearSwitchCost = 7
 )
@@ -121,24 +121,24 @@ func neighbours(c coord, cave [][]region) (paths []*coord) {
 	//
 	if c.p.x+1 < len(cave[c.p.y]) {
 		to := pos{x: c.p.x + 1, y: c.p.y}
-		_, g := cost(c, to, cave)
-		paths = append(paths, &coord{p: to, gear: g, priority: 0, index: 0})
+		// _, g := cost(c, to, cave)
+		paths = append(paths, &coord{p: to, gear: torch, priority: 0, index: 0})
 	}
 	if c.p.x-1 >= 0 {
 		to := pos{x: c.p.x - 1, y: c.p.y}
-		_, g := cost(c, to, cave)
-		paths = append(paths, &coord{p: to, gear: g, priority: 0, index: 0})
+		// _, g := cost(c, to, cave)
+		paths = append(paths, &coord{p: to, gear: torch, priority: 0, index: 0})
 	}
 	if c.p.y+1 < len(cave) {
 		to := pos{x: c.p.x, y: c.p.y + 1}
-		_, g := cost(c, to, cave)
-		paths = append(paths, &coord{p: to, gear: g, priority: 0, index: 0})
+		// _, g := cost(c, to, cave)
+		paths = append(paths, &coord{p: to, gear: torch, priority: 0, index: 0})
 		// paths = append(paths, pos{x: c.x, y: c.y + 1})
 	}
 	if c.p.y-1 >= 0 {
 		to := pos{x: c.p.x, y: c.p.y - 1}
-		_, g := cost(c, to, cave)
-		paths = append(paths, &coord{p: to, gear: g, priority: 0, index: 0})
+		// _, g := cost(c, to, cave)
+		paths = append(paths, &coord{p: to, gear: torch, priority: 0, index: 0})
 		// paths = append(paths, pos{x: c.x, y: c.y - 1})
 	}
 	return
@@ -146,10 +146,10 @@ func neighbours(c coord, cave [][]region) (paths []*coord) {
 
 func main() {
 	// Create the map
-	cave := make([][]region, target.y+10)
-	for y := 0; y <= target.y+9; y++ {
-		cave[y] = make([]region, target.x+10)
-		for x := 0; x <= target.x+9; x++ {
+	cave := make([][]region, maxY)
+	for y := 0; y < maxY; y++ {
+		cave[y] = make([]region, maxX)
+		for x := 0; x < maxX; x++ {
 			if y == 0 && x == 0 {
 				cave[y][x] = region{geoindex: 0, t: 0, erosion: 0}
 				continue
@@ -212,7 +212,7 @@ func main() {
 			moveCost, newGear := cost(current, next.p, cave)
 			newCost := costSoFar[current.p] + moveCost
 
-			if _, ok := costSoFar[next.p]; !ok || newCost < costSoFar[next.p] {
+			if cost, ok := costSoFar[next.p]; !ok || newCost < cost {
 				next.gear = newGear
 				costSoFar[next.p] = newCost
 				priority := newCost + distance(goal, next.p)
