@@ -225,14 +225,17 @@ func main() {
 	}
 	// fmt.Println(from)
 	allPath := make([]pos, 0)
-	current := goal
-	// allCost := 0
-	for current != start.p {
-		allPath = append(allPath, current)
-		next := from[current]
-		current = next.p
+	current := &coord{p: goal, gear: torch}
+	allCost := 0
+	for current.p != start.p {
+		allPath = append(allPath, current.p)
+		next := from[current.p]
+		c, _ := cost(*current, next.p, cave)
+		allCost += c
+		current = next
 	}
 	displayPath(allPath, cave)
+	fmt.Println(allCost + 7)
 }
 
 func display(r [][]region) {
