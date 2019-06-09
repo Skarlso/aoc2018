@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -46,8 +46,8 @@ func main() {
 	immuneSystem := new(ImmuneSystem)
 	infection.Groups = make([]*group, 0)
 	immuneSystem.Groups = make([]*group, 0)
+	var format = regexp.MustCompile(`^(\d+) units each with (\d+) hit points (\(?.*\)?)\s?with an attack that does (\d+) (\w+) damage at initiative (\d+)`)
 	for _, l := range lines {
-		fmt.Println("Line: ", l)
 		if l == "Infection:" {
 			infectionsTurn = true
 			continue
@@ -57,30 +57,21 @@ func main() {
 
 			continue
 		}
-		var (
-			count int
-			hitPoint int
-			//weakness map[string]bool
-			//immunity map[string]bool
-			weaknessesAndImmunities string
-			damage                  int
-			initiative              int
-			attackType              string
-		)
+		//var (
+		//	count int
+		//	hitPoint int
+		//	//weakness map[string]bool
+		//	//immunity map[string]bool
+		//	weaknessesAndImmunities string
+		//	damage                  int
+		//	initiative              int
+		//	attackType              string
+		//)
 		// 989 units each with 1274 hit points (immune to fire; weak to bludgeoning, slashing) with an attack that does 25 slashing damage at initiative 3
-		_, err := fmt.Sscanf(
-			l,
-			"%d units each with %d hit points %s with an attack that does %d %s damage at initiative %d",
-			&count,
-			&hitPoint,
-			&weaknessesAndImmunities,
-			&damage,
-			&attackType,
-			&initiative)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(weaknessesAndImmunities)
+
+		matches := format.FindAllStringSubmatch(l, -1)
+		fmt.Println("Line: ", l)
+		fmt.Printf("Matches: %q\n", matches)
 	}
 }
 
