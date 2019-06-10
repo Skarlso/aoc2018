@@ -66,6 +66,10 @@ type group struct {
 func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
+	run(content)
+}
+
+func run(content []byte) {
 	lines := strings.Split(string(content), "\n")
 	infectionsTurn := false
 
@@ -181,7 +185,7 @@ func main() {
 
 		// Selection phase.
 		for _, a := range armies {
-			if a.Unit.count == 0 {
+			if a.Unit.count < 1 {
 				continue
 			}
 			var enemy groups
@@ -193,7 +197,7 @@ func main() {
 			mostDamage := -1
 			var target *group
 			for _, e := range enemy {
-				if e.attacker != nil {
+				if e.attacker != nil || e.Unit.count < 1 {
 					continue
 				}
 				damage := a.EffectivePower
@@ -234,8 +238,10 @@ func main() {
 				continue
 			}
 
-			unitsRemain := int(math.Ceil(float64(((a.target.Unit.count * a.target.Unit.hitPoints) - a.damageToTarget) / a.Unit.count)))
-			a.target.Unit.count = unitsRemain
+			fullHealth := a.target.Unit.count * a.target.Unit.hitPoints
+			unitsRemain := float64(fullHealth - a.damageToTarget) / float64(a.target.Unit.hitPoints)
+			u := int(math.Ceil(unitsRemain))
+			a.target.Unit.count = u
 		}
 
 		// Re-sort the armies after battle so the order is always correct.
@@ -245,6 +251,8 @@ func main() {
 	}
 	if immuneSystemWon {
 		fmt.Println("glory to the sontaaren empire")
+	} else {
+		fmt.Println("bummer")
 	}
 }
 
