@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -146,10 +147,18 @@ func main() {
 	}
 	sort.Sort(immuneSystem.Groups)
 	sort.Sort(infection.Groups)
-	over := false
-	for !over {
-
-		over = true
+	immuneSystemWon := false
+	for {
+		if len(immuneSystem.Groups) == 0 && len(infection.Groups) > 0 {
+			break
+		}
+		if len(infection.Groups) == 0 && len(infection.Groups) < 1 {
+			immuneSystemWon = true
+			break
+		}
+	}
+	if immuneSystemWon {
+		fmt.Println("glory to the sontaaren empire")
 	}
 }
 
