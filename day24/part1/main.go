@@ -18,11 +18,6 @@ func (a groups) Len() int           { return len(a) }
 func (a groups) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a groups) Less(i, j int) bool { return a[i].EffectivePower > a[j].EffectivePower }
 
-type Army interface {
-	Attack(army *Army)
-	Select(army *Army)
-}
-
 type Infection struct {
 	Groups groups
 }
@@ -156,20 +151,10 @@ func main() {
 			immuneSystemWon = true
 			break
 		}
+
 	}
 	if immuneSystemWon {
 		fmt.Println("glory to the sontaaren empire")
 	}
 }
 
-func (ImmuneSystem) Select(defenders *Army) {
-}
-
-func (ImmuneSystem) Attack(defenders *Army) {
-}
-
-func (Infection) Select(defenders *Army) {
-}
-
-func (Infection) Attack(defenders *Army) {
-}
