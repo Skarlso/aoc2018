@@ -12,11 +12,21 @@ import (
 	//"github.com/davecgh/go-spew/spew"
 )
 
+const (
+	InfectionArmy = iota
+	ImmuneSystemArmy
+)
+
 type groups []*group
 
 func (a groups) Len() int           { return len(a) }
 func (a groups) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a groups) Less(i, j int) bool { return a[i].EffectivePower > a[j].EffectivePower }
+func (a groups) Less(i, j int) bool {
+	if a[i].EffectivePower == a[j].EffectivePower {
+		return a[i].Unit.initiative > a[j].Unit.initiative
+	}
+	return a[i].EffectivePower > a[j].EffectivePower
+}
 
 type Infection struct {
 	Groups groups
@@ -39,6 +49,9 @@ type unit struct {
 type group struct {
 	Unit *unit
 	EffectivePower int
+	target *group
+	attacker *group
+	t int
 }
 
 func main() {
@@ -49,8 +62,9 @@ func main() {
 
 	infection := new(Infection)
 	immuneSystem := new(ImmuneSystem)
-	infection.Groups = make([]*group, 0)
-	immuneSystem.Groups = make([]*group, 0)
+	infection.Groups = make(groups, 0)
+	immuneSystem.Groups = make(groups, 0)
+	armies := make(groups, 0)
 	var format = regexp.MustCompile(`^(\d+) units each with (\d+) hit points (\(?.*\)?)\s?with an attack that does (\d+) (\w+) damage at initiative (\d+)`)
 	for _, l := range lines {
 		if len(l) < 1 || l == "Immune System:" { continue }
@@ -134,14 +148,18 @@ func main() {
 		}
 		g.Unit = u
 		g.EffectivePower = u.count * u.attackDamage
+		armies = append(armies, g)
 		if infectionsTurn {
+			g.t = InfectionArmy
 			infection.Groups = append(infection.Groups, g)
 			continue
 		}
+		g.t = ImmuneSystemArmy
 		immuneSystem.Groups = append(immuneSystem.Groups, g)
 	}
-	sort.Sort(immuneSystem.Groups)
-	sort.Sort(infection.Groups)
+
+	// Sorting considers initiative as well.
+	sort.Sort(armies)
 	immuneSystemWon := false
 	for {
 		if len(immuneSystem.Groups) == 0 && len(infection.Groups) > 0 {
@@ -152,6 +170,55 @@ func main() {
 			break
 		}
 
+		// Selection phase.
+		for _, a := range armies {
+			if a.Unit.count == 0 {
+				continue
+			}
+			var enemy groups
+			if a.t == ImmuneSystemArmy {
+				enemy = infection.Groups
+			} else {
+				enemy = immuneSystem.Groups
+			}
+			mostDamage := -1
+			var target *group
+			for _, e := range enemy {
+				if e.attacker != nil {
+					continue
+				}
+				damage := a.EffectivePower
+				if _, ok := e.Unit.immunities[a.Unit.attackType]; ok {
+					damage = 0
+					a.target = nil
+					continue
+				}
+				if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
+					damage *= 2
+				}
+				if damage > mostDamage {
+					target = e
+					mostDamage = damage
+				} else if damage == mostDamage && target != nil {
+					if e.EffectivePower > target.EffectivePower {
+						target = e
+					} else if e.EffectivePower == target.EffectivePower {
+						if e.Unit.initiative > target.Unit.initiative {
+							target = e
+						}
+					}
+				}
+			}
+			a.target = target
+			if target != nil {
+				target.attacker = a
+			}
+		}
+
+		// Attacking phase.
+
+		// Re-sort the armies after battle so the order is always correct.
+		sort.Sort(armies)
 	}
 	if immuneSystemWon {
 		fmt.Println("glory to the sontaaren empire")
