@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"regexp"
 	"sort"
@@ -18,6 +19,7 @@ const (
 )
 
 type groups []*group
+type initiativeGroup []*group
 
 func (a groups) Len() int           { return len(a) }
 func (a groups) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
@@ -26,6 +28,12 @@ func (a groups) Less(i, j int) bool {
 		return a[i].Unit.initiative > a[j].Unit.initiative
 	}
 	return a[i].EffectivePower > a[j].EffectivePower
+}
+
+func (a initiativeGroup) Len() int           { return len(a) }
+func (a initiativeGroup) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a initiativeGroup) Less(i, j int) bool {
+	return a[i].Unit.initiative > a[j].Unit.initiative
 }
 
 type Infection struct {
@@ -51,6 +59,7 @@ type group struct {
 	EffectivePower int
 	target *group
 	attacker *group
+	damageToTarget int
 	t int
 }
 
@@ -162,10 +171,10 @@ func main() {
 	sort.Sort(armies)
 	immuneSystemWon := false
 	for {
-		if len(immuneSystem.Groups) == 0 && len(infection.Groups) > 0 {
+		if !immuneSystem.hasUnits() && infection.hasUnites() {
 			break
 		}
-		if len(infection.Groups) == 0 && len(infection.Groups) < 1 {
+		if immuneSystem.hasUnits() && !infection.hasUnites() {
 			immuneSystemWon = true
 			break
 		}
@@ -196,7 +205,7 @@ func main() {
 				if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
 					damage *= 2
 				}
-				if damage > mostDamage {
+				if damage > mostDamage && damage > 0 {
 					target = e
 					mostDamage = damage
 				} else if damage == mostDamage && target != nil {
@@ -210,18 +219,50 @@ func main() {
 				}
 			}
 			a.target = target
+			a.damageToTarget = mostDamage
 			if target != nil {
 				target.attacker = a
 			}
 		}
 
+		// OH Gods this is horrible.
+		initGroup := initiativeGroup(armies)
+		sort.Sort(initGroup)
 		// Attacking phase.
+		for _, a := range initGroup {
+			if a.target == nil {
+				continue
+			}
+
+			unitsRemain := int(math.Ceil(float64(((a.target.Unit.count * a.target.Unit.hitPoints) - a.damageToTarget) / a.Unit.count)))
+			a.target.Unit.count = unitsRemain
+		}
 
 		// Re-sort the armies after battle so the order is always correct.
 		sort.Sort(armies)
+
+		// Fight ends if an army has no more units.
 	}
 	if immuneSystemWon {
 		fmt.Println("glory to the sontaaren empire")
 	}
+}
+
+func (i *ImmuneSystem) hasUnits() bool {
+	for _, g := range i.Groups {
+		if g.Unit.count > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func (i *Infection) hasUnites() bool {
+	for _, g := range i.Groups {
+		if g.Unit.count > 0 {
+			return true
+		}
+	}
+	return false
 }
 
