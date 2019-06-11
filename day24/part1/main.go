@@ -57,7 +57,6 @@ type group struct {
 	EffectivePower int
 	target         *group
 	attacker       *group
-	damageToTarget int
 	t              int
 }
 
@@ -184,77 +183,14 @@ func run(content []byte) {
 		}
 
 		// Selection phase.
-		for _, a := range armies {
-			if a.Unit.count < 1 {
-				continue
-			}
-			var enemy groups
-			if a.t == ImmuneSystemArmy {
-				enemy = infection.Groups
-			} else {
-				enemy = immuneSystem.Groups
-			}
-			mostDamage := -1
-			var target *group
-			for _, e := range enemy {
-				if e.attacker != nil || e.Unit.count < 1 {
-					continue
-				}
-				damage := a.EffectivePower
-				if _, ok := e.Unit.immunities[a.Unit.attackType]; ok {
-					damage = 0
-					a.target = nil
-					continue
-				}
-				if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
-					damage *= 2
-				}
-				if damage > mostDamage && damage > 0 {
-					target = e
-					mostDamage = damage
-				} else if damage == mostDamage && target != nil {
-					if e.EffectivePower > target.EffectivePower {
-						target = e
-					} else if e.EffectivePower == target.EffectivePower {
-						if e.Unit.initiative > target.Unit.initiative {
-							target = e
-						}
-					}
-				}
-			}
-			a.target = target
-			if target != nil {
-				target.attacker = a
-			}
-		}
+		selectionPhase(armies, infection, immuneSystem)
 
 		// OH Gods this is horrible.
 		initGroup := initiativeGroup(armies)
 		sort.Sort(initGroup)
 
 		// Attacking phase.
-		for _, a := range initGroup {
-			a.EffectivePower = a.Unit.count * a.Unit.attackDamage
-			if a.target == nil {
-				continue
-			}
-			// It might already have lost units.
-			damage := a.EffectivePower
-			if _, ok := a.target.Unit.immunities[a.Unit.attackType]; ok {
-				damage = 0
-			}
-			if _, ok := a.target.Unit.weaknesses[a.Unit.attackType]; ok {
-				damage *= 2
-			}
-
-			unitsKilled := float64(damage) / float64(a.target.Unit.hitPoints)
-			unitsRemain := a.target.Unit.count - int(unitsKilled)
-			a.target.Unit.count = unitsRemain
-			a.target.EffectivePower = a.target.Unit.count * a.target.Unit.attackDamage
-			// Reset the attacker and the target.
-			a.target.attacker = nil
-			a.target = nil
-		}
+		attackPhase(initGroup)
 
 		// Re-sort the armies after battle so the order is always correct.
 		sort.Sort(armies)
@@ -278,6 +214,76 @@ func run(content []byte) {
 	}
 
 	fmt.Println("winning army unit count: ", sum)
+}
+
+func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSystem) {
+	for _, a := range armies {
+		if a.Unit.count < 1 {
+			continue
+		}
+		var enemy groups
+		if a.t == ImmuneSystemArmy {
+			enemy = infection.Groups
+		} else {
+			enemy = immuneSystem.Groups
+		}
+		mostDamage := -1
+		var target *group
+		for _, e := range enemy {
+			if e.attacker != nil || e.Unit.count < 1 {
+				continue
+			}
+			damage := a.EffectivePower
+			if _, ok := e.Unit.immunities[a.Unit.attackType]; ok {
+				a.target = nil
+				continue
+			}
+			if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
+				damage *= 2
+			}
+			if damage > mostDamage && damage > 0 {
+				target = e
+				mostDamage = damage
+			} else if damage == mostDamage && target != nil {
+				if e.EffectivePower > target.EffectivePower {
+					target = e
+				} else if e.EffectivePower == target.EffectivePower {
+					if e.Unit.initiative > target.Unit.initiative {
+						target = e
+					}
+				}
+			}
+		}
+		a.target = target
+		if target != nil {
+			target.attacker = a
+		}
+	}
+}
+
+func attackPhase(initGroup initiativeGroup) {
+	for _, a := range initGroup {
+		a.EffectivePower = a.Unit.count * a.Unit.attackDamage
+		if a.target == nil {
+			continue
+		}
+		damage := a.EffectivePower
+		if _, ok := a.target.Unit.immunities[a.Unit.attackType]; ok {
+			damage = 0
+		}
+		if _, ok := a.target.Unit.weaknesses[a.Unit.attackType]; ok {
+			damage *= 2
+		}
+
+		unitsKilled := damage / a.target.Unit.hitPoints
+		unitsRemain := a.target.Unit.count - unitsKilled
+		a.target.Unit.count = unitsRemain
+		// It might already have lost units.
+		a.target.EffectivePower = a.target.Unit.count * a.target.Unit.attackDamage
+		// Reset the attacker and the target.
+		a.target.attacker = nil
+		a.target = nil
+	}
 }
 
 func (i *ImmuneSystem) hasUnits() bool {
