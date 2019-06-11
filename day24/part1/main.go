@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-
 	//"github.com/davecgh/go-spew/spew"
 )
 
@@ -20,8 +19,8 @@ const (
 type groups []*group
 type initiativeGroup []*group
 
-func (a groups) Len() int           { return len(a) }
-func (a groups) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a groups) Len() int      { return len(a) }
+func (a groups) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a groups) Less(i, j int) bool {
 	if a[i].EffectivePower == a[j].EffectivePower {
 		return a[i].Unit.initiative > a[j].Unit.initiative
@@ -29,8 +28,8 @@ func (a groups) Less(i, j int) bool {
 	return a[i].EffectivePower > a[j].EffectivePower
 }
 
-func (a initiativeGroup) Len() int           { return len(a) }
-func (a initiativeGroup) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a initiativeGroup) Len() int      { return len(a) }
+func (a initiativeGroup) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a initiativeGroup) Less(i, j int) bool {
 	return a[i].Unit.initiative > a[j].Unit.initiative
 }
@@ -44,22 +43,22 @@ type ImmuneSystem struct {
 }
 
 type unit struct {
-	count int
-	hitPoints int
+	count        int
+	hitPoints    int
 	attackDamage int
-	initiative int
-	attackType string
-	weaknesses map[string]bool
-	immunities map[string]bool
+	initiative   int
+	attackType   string
+	weaknesses   map[string]bool
+	immunities   map[string]bool
 }
 
 type group struct {
-	Unit *unit
+	Unit           *unit
 	EffectivePower int
-	target *group
-	attacker *group
+	target         *group
+	attacker       *group
 	damageToTarget int
-	t int
+	t              int
 }
 
 func main() {
@@ -79,7 +78,9 @@ func run(content []byte) {
 	armies := make(groups, 0)
 	var format = regexp.MustCompile(`^(\d+) units each with (\d+) hit points (\(?.*\)?)\s?with an attack that does (\d+) (\w+) damage at initiative (\d+)`)
 	for _, l := range lines {
-		if len(l) < 1 || l == "Immune System:" { continue }
+		if len(l) < 1 || l == "Immune System:" {
+			continue
+		}
 		if l == "Infection:" {
 			infectionsTurn = true
 			continue
@@ -202,7 +203,7 @@ func run(content []byte) {
 				damage := a.EffectivePower
 				if _, ok := e.Unit.immunities[a.Unit.attackType]; ok {
 					damage = 0
-					//a.target = nil
+					a.target = nil
 					continue
 				}
 				if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
@@ -233,27 +234,23 @@ func run(content []byte) {
 
 		// Attacking phase.
 		for _, a := range initGroup {
+			a.EffectivePower = a.Unit.count * a.Unit.attackDamage
 			if a.target == nil {
 				continue
 			}
 			// It might already have lost units.
-			a.EffectivePower = a.Unit.count * a.Unit.attackDamage
 			damage := a.EffectivePower
 			if _, ok := a.target.Unit.immunities[a.Unit.attackType]; ok {
 				damage = 0
-				//a.target = nil
-				continue
 			}
 			if _, ok := a.target.Unit.weaknesses[a.Unit.attackType]; ok {
 				damage *= 2
 			}
 
-			//fullHealth := a.target.Unit.count * a.target.Unit.hitPoints
 			unitsKilled := float64(damage) / float64(a.target.Unit.hitPoints)
 			unitsRemain := a.target.Unit.count - int(unitsKilled)
-			//u := int(math.Ceil(unitsRemain))
 			a.target.Unit.count = unitsRemain
-
+			a.target.EffectivePower = a.target.Unit.count * a.target.Unit.attackDamage
 			// Reset the attacker and the target.
 			a.target.attacker = nil
 			a.target = nil
@@ -300,4 +297,3 @@ func (i *Infection) hasUnites() bool {
 	}
 	return false
 }
-
