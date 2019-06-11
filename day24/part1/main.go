@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"regexp"
 	"sort"
@@ -203,7 +202,7 @@ func run(content []byte) {
 				damage := a.EffectivePower
 				if _, ok := e.Unit.immunities[a.Unit.attackType]; ok {
 					damage = 0
-					a.target = nil
+					//a.target = nil
 					continue
 				}
 				if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
@@ -223,7 +222,6 @@ func run(content []byte) {
 				}
 			}
 			a.target = target
-			a.damageToTarget = mostDamage
 			if target != nil {
 				target.attacker = a
 			}
@@ -232,22 +230,33 @@ func run(content []byte) {
 		// OH Gods this is horrible.
 		initGroup := initiativeGroup(armies)
 		sort.Sort(initGroup)
+
 		// Attacking phase.
 		for _, a := range initGroup {
 			if a.target == nil {
 				continue
 			}
+			// It might already have lost units.
+			a.EffectivePower = a.Unit.count * a.Unit.attackDamage
+			damage := a.EffectivePower
+			if _, ok := a.target.Unit.immunities[a.Unit.attackType]; ok {
+				damage = 0
+				//a.target = nil
+				continue
+			}
+			if _, ok := a.target.Unit.weaknesses[a.Unit.attackType]; ok {
+				damage *= 2
+			}
 
-			fullHealth := a.target.Unit.count * a.target.Unit.hitPoints
-			unitsRemain := float64(fullHealth - a.damageToTarget) / float64(a.target.Unit.hitPoints)
-			u := int(math.Ceil(unitsRemain))
-			a.target.Unit.count = u
+			//fullHealth := a.target.Unit.count * a.target.Unit.hitPoints
+			unitsKilled := float64(damage) / float64(a.target.Unit.hitPoints)
+			unitsRemain := a.target.Unit.count - int(unitsKilled)
+			//u := int(math.Ceil(unitsRemain))
+			a.target.Unit.count = unitsRemain
 
 			// Reset the attacker and the target.
 			a.target.attacker = nil
 			a.target = nil
-
-			a.EffectivePower = a.Unit.count * a.Unit.attackDamage
 		}
 
 		// Re-sort the armies after battle so the order is always correct.
@@ -255,11 +264,23 @@ func run(content []byte) {
 
 		// Fight ends if an army has no more units.
 	}
+	var winningArmy groups
 	if immuneSystemWon {
-		fmt.Println("glory to the sontaaren empire")
+		fmt.Println("glory to the Sontaaren empire")
+		winningArmy = immuneSystem.Groups
 	} else {
 		fmt.Println("bummer")
+		winningArmy = infection.Groups
 	}
+	sum := 0
+	for _, g := range winningArmy {
+		fmt.Println("unit count: ", g.Unit.count)
+		if g.Unit.count > 0 {
+			sum += g.Unit.count
+		}
+	}
+
+	fmt.Println("winning army unit count: ", sum)
 }
 
 func (i *ImmuneSystem) hasUnits() bool {
