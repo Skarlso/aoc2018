@@ -246,6 +246,8 @@ func run(content []byte) {
 			// Reset the attacker and the target.
 			a.target.attacker = nil
 			a.target = nil
+
+			a.EffectivePower = a.Unit.count * a.Unit.attackDamage
 		}
 
 		// Re-sort the armies after battle so the order is always correct.
