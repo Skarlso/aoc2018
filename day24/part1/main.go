@@ -242,6 +242,10 @@ func run(content []byte) {
 			unitsRemain := float64(fullHealth - a.damageToTarget) / float64(a.target.Unit.hitPoints)
 			u := int(math.Ceil(unitsRemain))
 			a.target.Unit.count = u
+
+			// Reset the attacker and the target.
+			a.target.attacker = nil
+			a.target = nil
 		}
 
 		// Re-sort the armies after battle so the order is always correct.
