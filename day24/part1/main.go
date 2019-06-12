@@ -95,8 +95,8 @@ func run(content []byte) {
 		attackType := matches[0][5]
 		initiative, _ := strconv.Atoi(matches[0][6])
 
-		g := new(group)
-		u := new(unit)
+		g := &group{}
+		u := &unit{}
 		u.initiative = initiative
 		u.hitPoints = hitPoint
 		u.attackDamage = damage
