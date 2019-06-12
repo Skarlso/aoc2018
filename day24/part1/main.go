@@ -174,10 +174,10 @@ func run(content []byte) {
 	sort.Sort(armies)
 	immuneSystemWon := false
 	for {
-		if !immuneSystem.hasUnits() && infection.hasUnites() {
+		if !immuneSystem.hasUnits() {
 			break
 		}
-		if immuneSystem.hasUnits() && !infection.hasUnites() {
+		if !infection.hasUnites() {
 			immuneSystemWon = true
 			break
 		}
@@ -230,6 +230,7 @@ func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSys
 		mostDamage := -1
 		var target *group
 		for _, e := range enemy {
+			// If the enemy group already has an attacker or its unit count is 0, skip that enemy.
 			if e.attacker != nil || e.Unit.count < 1 {
 				continue
 			}
@@ -241,7 +242,7 @@ func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSys
 			if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
 				damage *= 2
 			}
-			if damage > mostDamage && damage > 0 {
+			if damage > mostDamage {
 				target = e
 				mostDamage = damage
 			} else if damage == mostDamage && target != nil {
@@ -263,6 +264,10 @@ func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSys
 
 func attackPhase(initGroup initiativeGroup) {
 	for _, a := range initGroup {
+		if a.Unit.count < 1 {
+			fmt.Println("skipped unit: ", a.Unit.count)
+			continue
+		}
 		a.EffectivePower = a.Unit.count * a.Unit.attackDamage
 		if a.target == nil {
 			continue
