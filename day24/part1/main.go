@@ -201,7 +201,6 @@ func run(content []byte) {
 	}
 
 	fmt.Println("winning army unit count: ", sum)
-	fmt.Println(winningArmy)
 }
 
 func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSystem) {
@@ -215,16 +214,15 @@ func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSys
 		} else {
 			enemy = immuneSystem.Groups
 		}
-		mostDamage := -1
+		mostDamage := 0
 		var target *group
 		for _, e := range enemy {
+			damage := a.EffectivePower
 			// If the enemy group already has an attacker or its unit count is 0, skip that enemy.
 			if e.attacker != nil || e.Unit.count < 1 {
 				continue
 			}
-			damage := a.EffectivePower
 			if _, ok := e.Unit.immunities[a.Unit.attackType]; ok {
-				a.target = nil
 				continue
 			}
 			if _, ok := e.Unit.weaknesses[a.Unit.attackType]; ok {
@@ -252,16 +250,13 @@ func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSys
 
 func attackPhase(initGroup initiativeGroup) {
 	for _, a := range initGroup {
-		if a.Unit.count < 1 {
-			continue
-		}
 		a.EffectivePower = a.Unit.count * a.Unit.attackDamage
-		if a.target == nil {
+		if a.Unit.count < 1 || a.target == nil {
 			continue
 		}
 		damage := a.EffectivePower
 		if _, ok := a.target.Unit.immunities[a.Unit.attackType]; ok {
-			damage = 0
+			continue
 		}
 		if _, ok := a.target.Unit.weaknesses[a.Unit.attackType]; ok {
 			damage *= 2
