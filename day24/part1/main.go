@@ -107,6 +107,7 @@ func run(content []byte) {
 			weaknessesAndImmunities = strings.ReplaceAll(weaknessesAndImmunities, "(", "")
 			weaknessesAndImmunities = strings.ReplaceAll(weaknessesAndImmunities, ")", "")
 			weaknessesAndImmunities = strings.TrimSpace(weaknessesAndImmunities)
+			var is, ws []string
 			if strings.Contains(weaknessesAndImmunities, ";") {
 				wi := strings.Split(weaknessesAndImmunities, ";")
 				var immunities, weaknesses string
@@ -119,45 +120,33 @@ func run(content []byte) {
 				weaknesses = strings.ReplaceAll(weaknesses, "weak to", "")
 				immunities = strings.TrimSpace(immunities)
 				weaknesses = strings.TrimSpace(weaknesses)
-				is := strings.Split(immunities, ",")
-				isMap := make(map[string]bool)
-				for _, i := range is {
-					i = strings.TrimSpace(i)
-					isMap[i] = true
-				}
-				ws := strings.Split(weaknesses, ",")
-				wsMap := make(map[string]bool)
-				for _, w := range ws {
-					w = strings.TrimSpace(w)
-					wsMap[w] = true
-				}
-				u.weaknesses = wsMap
-				u.immunities = isMap
-				//fmt.Println(immunities, weaknesses)
+				is = strings.Split(immunities, ",")
+				ws = strings.Split(weaknesses, ",")
 			} else {
 				if strings.Contains(weaknessesAndImmunities, "immune") {
 					immunities := strings.ReplaceAll(weaknessesAndImmunities, "immune to", "")
 					immunities = strings.TrimSpace(immunities)
-					is := strings.Split(immunities, ",")
-					isMap := make(map[string]bool)
-					for _, i := range is {
-						i = strings.TrimSpace(i)
-						isMap[i] = true
-					}
-					u.immunities = isMap
+					is = strings.Split(immunities, ",")
 				} else {
 					weaknesses := strings.ReplaceAll(weaknessesAndImmunities, "weak to", "")
 					weaknesses = strings.TrimSpace(weaknesses)
-					ws := strings.Split(weaknesses, ",")
-					wsMap := make(map[string]bool)
-					for _, w := range ws {
-						w = strings.TrimSpace(w)
-						wsMap[w] = true
-					}
-					u.weaknesses = wsMap
+					ws = strings.Split(weaknesses, ",")
 				}
 
 			}
+
+			isMap := make(map[string]bool)
+			for _, i := range is {
+				i = strings.TrimSpace(i)
+				isMap[i] = true
+			}
+			wsMap := make(map[string]bool)
+			for _, w := range ws {
+				w = strings.TrimSpace(w)
+				wsMap[w] = true
+			}
+			u.weaknesses = wsMap
+			u.immunities = isMap
 		}
 		g.Unit = u
 		g.EffectivePower = u.count * u.attackDamage
