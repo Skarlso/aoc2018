@@ -75,6 +75,7 @@ func run(content []byte) {
 	infection.Groups = make(groups, 0)
 	immuneSystem.Groups = make(groups, 0)
 	armies := make(groups, 0)
+	initiativeSortedArmy := make(initiativeGroup, 0)
 	var format = regexp.MustCompile(`^(\d+) units each with (\d+) hit points (\(?.*\)?)\s?with an attack that does (\d+) (\w+) damage at initiative (\d+)`)
 	for _, l := range lines {
 		if len(l) < 1 || l == "Immune System:" {
@@ -161,6 +162,7 @@ func run(content []byte) {
 		g.Unit = u
 		g.EffectivePower = u.count * u.attackDamage
 		armies = append(armies, g)
+		initiativeSortedArmy = append(initiativeSortedArmy, g)
 		if infectionsTurn {
 			g.t = InfectionArmy
 			infection.Groups = append(infection.Groups, g)
@@ -170,8 +172,9 @@ func run(content []byte) {
 		immuneSystem.Groups = append(immuneSystem.Groups, g)
 	}
 
-	// Sorting considers initiative as well.
-	sort.Sort(armies)
+	// We only need to sort once, since the initiatives remain the same.
+	sort.Sort(initiativeSortedArmy)
+
 	immuneSystemWon := false
 	for {
 		if !immuneSystem.hasUnits() {
@@ -182,18 +185,14 @@ func run(content []byte) {
 			break
 		}
 
+		// Re-sort the armies after battle so the order is always correct.
+		sort.Sort(armies)
+
 		// Selection phase.
 		selectionPhase(armies, infection, immuneSystem)
 
-		// OH Gods this is horrible.
-		initGroup := initiativeGroup(armies)
-		sort.Sort(initGroup)
-
 		// Attacking phase.
-		attackPhase(initGroup)
-
-		// Re-sort the armies after battle so the order is always correct.
-		sort.Sort(armies)
+		attackPhase(initiativeSortedArmy)
 
 		// Fight ends if an army has no more units.
 	}
@@ -265,7 +264,6 @@ func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSys
 func attackPhase(initGroup initiativeGroup) {
 	for _, a := range initGroup {
 		if a.Unit.count < 1 {
-			fmt.Println("skipped unit: ", a.Unit.count)
 			continue
 		}
 		a.EffectivePower = a.Unit.count * a.Unit.attackDamage
@@ -307,4 +305,12 @@ func (i *Infection) hasUnites() bool {
 		}
 	}
 	return false
+}
+
+func (u unit) String() string {
+	return fmt.Sprintf("Count: %d, Hit: %d, Weak: %+v, Immunities: %+v, damage: %d, DamageType: %s, Initiative: %d", u.count, u.hitPoints, u.weaknesses, u.immunities, u.attackDamage, u.attackType, u.initiative)
+}
+
+func (g group) String() string {
+	return fmt.Sprintf("Unit: %s, Effective Power: %d, Type: %d\n", g.Unit, g.EffectivePower, g.t)
 }
