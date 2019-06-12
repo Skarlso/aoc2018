@@ -195,13 +195,13 @@ func run(content []byte) {
 	}
 	sum := 0
 	for _, g := range winningArmy {
-		fmt.Println("unit count: ", g.Unit.count)
 		if g.Unit.count > 0 {
 			sum += g.Unit.count
 		}
 	}
 
 	fmt.Println("winning army unit count: ", sum)
+	fmt.Println(winningArmy)
 }
 
 func selectionPhase(armies groups, infection *Infection, immuneSystem *ImmuneSystem) {
