@@ -253,6 +253,7 @@ func attackPhase(initGroup initiativeGroup) {
 		a.EffectivePower = a.Unit.count * a.Unit.attackDamage
 		if a.Unit.count < 1 || a.target == nil {
 			if a.target != nil {
+				// Since this group is out of commission, clear its target.
 				a.target.attacker = nil
 				a.target = nil
 			}
