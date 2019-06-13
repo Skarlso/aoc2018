@@ -252,11 +252,15 @@ func attackPhase(initGroup initiativeGroup) {
 	for _, a := range initGroup {
 		a.EffectivePower = a.Unit.count * a.Unit.attackDamage
 		if a.Unit.count < 1 || a.target == nil {
+			if a.target != nil {
+				a.target.attacker = nil
+				a.target = nil
+			}
 			continue
 		}
 		damage := a.EffectivePower
 		if _, ok := a.target.Unit.immunities[a.Unit.attackType]; ok {
-			continue
+			damage = 0
 		}
 		if _, ok := a.target.Unit.weaknesses[a.Unit.attackType]; ok {
 			damage *= 2
