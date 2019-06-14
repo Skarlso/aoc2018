@@ -17,10 +17,6 @@ func (p point) dist(other point) int {
 	return abs(p.x-other.x) + abs(p.y-other.y) + abs(p.z-other.z) + abs(p.s-other.s)
 }
 
-func (p point) equal(other point) bool {
-	return p.x == other.x && p.y == other.y && p.z == other.z && p.s == other.s && p.chainID == other.chainID
-}
-
 func main() {
 	filename := os.Args[1]
 	content, _ := ioutil.ReadFile(filename)
@@ -42,34 +38,29 @@ func run(content []byte) {
 	}
 	for _, p1 := range points {
 		for _, p2 := range points {
-			//if p1.equal(*p2) {
-			//	continue
-			//}
-			// The encountered point is in a chain... We join that chain.
-			if p1.dist(*p2) < 4 {
-				if _, ok2 := chains[p2.chainID]; ok2 {
-					if _, ok := chains[p1.chainID]; !ok {
-						chains[p2.chainID] = append(chains[p2.chainID], p1)
-						p1.chainID = p2.chainID
-					} else {
-						if p1.chainID == p2.chainID {
-							continue
-						}
-						oldId := p1.chainID
-						for _, e := range chains[p1.chainID] {
-							e.chainID = p2.chainID
-						}
-						chains[p2.chainID] = append(chains[p2.chainID], chains[p1.chainID]...)
-						delete(chains, oldId)
-						p1.chainID = p2.chainID // although I think this already will be updated in the for
-					}
+			if p2.dist(*p1) > 3 {
+				continue
+			}
+
+			if _, ok2 := chains[p2.chainID]; ok2 {
+				if _, ok := chains[p1.chainID]; !ok {
+					chains[p2.chainID] = append(chains[p2.chainID], p1)
+					p1.chainID = p2.chainID
 				} else {
-					if _, ok1 := chains[p1.chainID]; !ok1 {
-						chains[p1.chainID] = make([]*point, 0)
+					if p1.chainID == p2.chainID {
+						continue
 					}
-					chains[p1.chainID] = append(chains[p1.chainID], p2)
-					p2.chainID = p1.chainID
+					oldId := p1.chainID
+					for _, e := range chains[p1.chainID] {
+						e.chainID = p2.chainID
+					}
+					chains[p2.chainID] = append(chains[p2.chainID], chains[p1.chainID]...)
+					delete(chains, oldId)
+					p1.chainID = p2.chainID // although I think this already will be updated in the for
 				}
+			} else {
+				chains[p1.chainID] = append(chains[p1.chainID], p2)
+				p2.chainID = p1.chainID
 			}
 		}
 	}
