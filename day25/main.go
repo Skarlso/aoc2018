@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"strings"
 )
@@ -11,19 +10,19 @@ import (
 type point struct {
 	x, y, z, s int
 	// key is the key of the chain that this point is a part off
-	key *point
+	chainID int
 }
 
 func (p point) dist(other point) int {
-	d := math.Sqrt(float64((p.x-other.x)*(p.x-other.x) +
-		(p.y-other.y)*(p.y-other.y) +
-		(p.z-other.z)*(p.z-other.z) +
-		(p.s-other.s)*(p.s-other.s)))
-	return int(d)
+	d := abs(p.x-other.x) +
+		abs(p.y-other.y) +
+		abs(p.z-other.z) +
+		abs(p.s-other.s)
+	return d
 }
 
 func (p point) equal(other point) bool {
-	return p.x == other.x && p.y == other.y && p.z == other.z && p.s == other.s
+	return p.x == other.x && p.y == other.y && p.z == other.z && p.s == other.s && p.chainID == other.chainID
 }
 
 func main() {
@@ -33,16 +32,16 @@ func main() {
 }
 
 func run(content []byte) {
-	chains := make(map[*point][]point)
+	chains := make(map[int][]*point)
 	//chains := make([]*[]point, 0)
 	lines := strings.Split(string(content), "\n")
 	points := make([]*point, 0)
-	for _, l := range lines {
+	for i, l := range lines {
 		var (
 			x, y, z, s int
 		)
 		_, _ = fmt.Sscanf(l, "%d,%d,%d,%d", &x, &y, &z, &s)
-		p := point{x: x, y: y, z: z, s: s}
+		p := point{x: x, y: y, z: z, s: s, chainID: i}
 		points = append(points, &p)
 	}
 	for _, p1 := range points {
@@ -52,39 +51,46 @@ func run(content []byte) {
 			}
 			// The encountered point is in a chain... We join that chain.
 			if p1.dist(*p2) < 4 {
-				if _, ok2 := chains[p2]; ok2 {
-					if _, ok := chains[p1]; !ok {
-						chains[p2] = append(chains[p2], *p1)
-						p1.key = p2
-					} else if p1.key == nil && ok {
-						chains[p2] = append(chains[p2], chains[p1]...)
-						delete(chains, p1)
-						p1.key = p2
-					} else if p1.key != nil && !ok {
-						chains[p2] = append(chains[p2], chains[p1.key]...)
-						delete(chains, p1.key)
-						p1.key = p2
+				if _, ok2 := chains[p2.chainID]; ok2 {
+					if _, ok := chains[p1.chainID]; !ok {
+						chains[p2.chainID] = append(chains[p2.chainID], p1)
+						p1.chainID = p2.chainID
+					} else {
+						if p1.chainID == p2.chainID {
+							continue
+						}
+						for _, e := range chains[p1.chainID] {
+							e.chainID = p2.chainID
+						}
+						chains[p2.chainID] = append(chains[p2.chainID], chains[p1.chainID]...)
+						// TODO: If the chain id is the same they are in the same chain, no need to delete the chain.
+						delete(chains, p1.chainID)
+						p1.chainID = p2.chainID // although I think this already will be updated in the for
 					}
-				} else if p2.key == nil && ok2 {
-					if _, ok1 := chains[p1]; !ok1 {
-						chains[p1] = make([]point, 0)
+				} else {
+					if _, ok1 := chains[p1.chainID]; !ok1 {
+						chains[p1.chainID] = make([]*point, 0)
 					}
-					chains[p1] = append(chains[p1], *p2)
-					p2.key = p1
-				} else if p2.key != nil && !ok2 {
-					chains[p1] = append(chains[p1], chains[p2.key]...)
-					delete(chains, p2.key)
-					p2.key = p1
+					chains[p1.chainID] = append(chains[p1.chainID], p2)
+					p2.chainID = p1.chainID
 				}
 			}
 		}
 	}
 	fmt.Println(len(chains))
-	display(points)
+	fmt.Println(chains)
+	//display(points)
 }
 
 func display(points []*point) {
 	for _, p := range points {
 		fmt.Println(p)
 	}
+}
+
+func abs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
 }
