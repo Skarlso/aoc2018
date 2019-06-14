@@ -14,11 +14,7 @@ type point struct {
 }
 
 func (p point) dist(other point) int {
-	d := abs(p.x-other.x) +
-		abs(p.y-other.y) +
-		abs(p.z-other.z) +
-		abs(p.s-other.s)
-	return d
+	return abs(p.x-other.x) + abs(p.y-other.y) + abs(p.z-other.z) + abs(p.s-other.s)
 }
 
 func (p point) equal(other point) bool {
@@ -46,9 +42,9 @@ func run(content []byte) {
 	}
 	for _, p1 := range points {
 		for _, p2 := range points {
-			if p1.equal(*p2) {
-				continue
-			}
+			//if p1.equal(*p2) {
+			//	continue
+			//}
 			// The encountered point is in a chain... We join that chain.
 			if p1.dist(*p2) < 4 {
 				if _, ok2 := chains[p2.chainID]; ok2 {
@@ -59,12 +55,12 @@ func run(content []byte) {
 						if p1.chainID == p2.chainID {
 							continue
 						}
+						oldId := p1.chainID
 						for _, e := range chains[p1.chainID] {
 							e.chainID = p2.chainID
 						}
 						chains[p2.chainID] = append(chains[p2.chainID], chains[p1.chainID]...)
-						// TODO: If the chain id is the same they are in the same chain, no need to delete the chain.
-						delete(chains, p1.chainID)
+						delete(chains, oldId)
 						p1.chainID = p2.chainID // although I think this already will be updated in the for
 					}
 				} else {
@@ -78,14 +74,7 @@ func run(content []byte) {
 		}
 	}
 	fmt.Println(len(chains))
-	fmt.Println(chains)
-	//display(points)
-}
-
-func display(points []*point) {
-	for _, p := range points {
-		fmt.Println(p)
-	}
+	//fmt.Println(chains)
 }
 
 func abs(a int) int {
