@@ -1,15 +1,12 @@
 package main
 
-import "testing"
+import (
+	"io/ioutil"
+	"testing"
+)
 
 func TestRun(t *testing.T) {
-	content := []byte(` 0,0,0,0
- 3,0,0,0
- 0,3,0,0
- 0,0,3,0
- 0,0,0,3
- 0,0,0,6
- 9,0,0,0
-12,0,0,0`)
+	//filename := os.Args[1]
+	content, _ := ioutil.ReadFile("input.txt")
 	run(content)
 }

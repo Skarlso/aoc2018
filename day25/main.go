@@ -9,8 +9,7 @@ import (
 
 type point struct {
 	x, y, z, s int
-	// key is the key of the chain that this point is a part off
-	chainID int
+	chainID    *point
 }
 
 func (p point) dist(other point) int {
@@ -24,16 +23,15 @@ func main() {
 }
 
 func run(content []byte) {
-	chains := make(map[int][]*point)
-	//chains := make([]*[]point, 0)
+	chains := make(map[*point][]*point)
 	lines := strings.Split(string(content), "\n")
 	points := make([]*point, 0)
-	for i, l := range lines {
+	for _, l := range lines {
 		var (
 			x, y, z, s int
 		)
 		_, _ = fmt.Sscanf(l, "%d,%d,%d,%d", &x, &y, &z, &s)
-		p := point{x: x, y: y, z: z, s: s, chainID: i}
+		p := point{x: x, y: y, z: z, s: s, chainID: nil}
 		points = append(points, &p)
 	}
 	for _, p1 := range points {
@@ -42,30 +40,45 @@ func run(content []byte) {
 				continue
 			}
 
-			if _, ok2 := chains[p2.chainID]; ok2 {
-				if _, ok := chains[p1.chainID]; !ok {
-					chains[p2.chainID] = append(chains[p2.chainID], p1)
-					p1.chainID = p2.chainID
+			if p1.chainID != nil {
+				//// Our point is currently in a constellation
+				if p2.chainID == nil {
+					// p2 is not in constellation
+					chains[p1.chainID] = append(chains[p1.chainID], p2)
+					p2.chainID = p1.chainID
 				} else {
+					// They are in the same constellation
 					if p1.chainID == p2.chainID {
 						continue
 					}
-					oldId := p1.chainID
-					for _, e := range chains[p1.chainID] {
-						e.chainID = p2.chainID
+					// We merge p2's constellation into p1's
+					oldId := p2.chainID
+					// Update all of p2's points to point to p1
+					for _, p := range chains[p2.chainID] {
+						p.chainID = p1.chainID
 					}
-					chains[p2.chainID] = append(chains[p2.chainID], chains[p1.chainID]...)
+					chains[p1.chainID] = append(chains[p1.chainID], chains[oldId]...)
+					// Remove p2's old constellation
 					delete(chains, oldId)
-					p1.chainID = p2.chainID // although I think this already will be updated in the for
+					p2.chainID = p1.chainID
 				}
 			} else {
-				chains[p1.chainID] = append(chains[p1.chainID], p2)
-				p2.chainID = p1.chainID
+				// p1 is not in a constellation
+				if p2.chainID == nil {
+					// p2 is not in a constellation either, we create a new one
+					chains[p1] = make([]*point, 0)
+					chains[p1] = append(chains[p1], p1, p2)
+					p1.chainID = p1
+					p2.chainID = p1
+				} else {
+					// p2 is already in a constellation we join it
+					chains[p2.chainID] = append(chains[p2.chainID], p1)
+					p1.chainID = p2
+				}
 			}
 		}
 	}
 	fmt.Println(len(chains))
-	//fmt.Println(chains)
 }
 
 func abs(a int) int {
